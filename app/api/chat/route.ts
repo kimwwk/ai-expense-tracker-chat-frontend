@@ -1,107 +1,131 @@
-import { NextRequest } from 'next/server'
+import { convertToModelMessages, streamText, tool, type UIMessage } from "ai"
+import { anthropic } from "@ai-sdk/anthropic"
+import { z } from "zod"
 
-/**
- * Mock LangGraph API Endpoint
- * Simulates a Python backend streaming SSE events
- * Handles:
- * 1. Text streaming
- * 2. Tool calls (with approval requests)
- * 3. External view updates
- */
+export const maxDuration = 30
 
-export async function POST(req: NextRequest) {
-  const { messages, approval } = await req.json()
-  const lastMessage = messages[messages.length - 1]
+const tools = {
+  get_recent_expenses: tool({
+    description: "Get recent expenses with optional filters for date range and category",
+    inputSchema: z.object({
+      limit: z.number().optional().describe("Number of expenses to retrieve"),
+      category: z.string().optional().describe("Filter by category (e.g., food, transport, entertainment)"),
+    }),
+    execute: async ({ limit = 10, category }) => {
+      console.log("[v0] Executing get_recent_expenses", { limit, category })
 
-  // Create a stream
-  const encoder = new TextEncoder()
-  const stream = new ReadableStream({
-    async start(controller) {
-      const sendEvent = (data: any) => {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
+      // Mock data - replace with actual database queries
+      const mockExpenses = [
+        { date: "2025-01-15", description: "Grocery Shopping", category: "Food", amount: 125.5 },
+        { date: "2025-01-14", description: "Uber Ride", category: "Transport", amount: 18.75 },
+        { date: "2025-01-14", description: "Netflix Subscription", category: "Entertainment", amount: 15.99 },
+        { date: "2025-01-13", description: "Restaurant Dinner", category: "Food", amount: 68.4 },
+        { date: "2025-01-12", description: "Gas Station", category: "Transport", amount: 45.0 },
+        { date: "2025-01-11", description: "Movie Tickets", category: "Entertainment", amount: 32.0 },
+      ]
+
+      const filtered = category
+        ? mockExpenses.filter((e) => e.category.toLowerCase() === category.toLowerCase())
+        : mockExpenses
+
+      return {
+        expenses: filtered.slice(0, limit),
+        total: filtered.reduce((sum, e) => sum + e.amount, 0),
       }
-
-      // Scenario 1: Handling an approval response
-      if (approval) {
-        if (approval.status === 'approved') {
-          sendEvent({ type: 'token', content: 'Action approved! Executing now...\n\n' })
-          await new Promise(r => setTimeout(r, 1000))
-          
-          // Simulate tool execution result
-          sendEvent({
-            type: 'tool_result',
-            tool: approval.tool,
-            toolCallId: approval.toolCallId,
-            data: { success: true, timestamp: new Date().toISOString() }
-          })
-          
-          sendEvent({ type: 'token', content: 'The action has been completed successfully.' })
-        } else {
-          sendEvent({ type: 'token', content: 'Action rejected. Is there anything else I can help with?' })
-        }
-        controller.close()
-        return
-      }
-
-      // Scenario 2: User asks to update dashboard (External View)
-      if (lastMessage.content.toLowerCase().includes('dashboard')) {
-        sendEvent({ type: 'token', content: 'Sure, I can update the dashboard for you.\n' })
-        await new Promise(r => setTimeout(r, 500))
-        
-        // Tool call to update external view
-        sendEvent({
-          type: 'tool_call',
-          tool: 'update_dashboard',
-          toolCallId: `call_${Date.now()}`,
-          params: { mode: 'analytics', data: { visitors: 1250, sales: 4500 } },
-          metadata: { ui_target: 'dashboard', description: 'Switching to analytics view' }
-        })
-        
-        await new Promise(r => setTimeout(r, 1000))
-        sendEvent({ type: 'token', content: 'I\'ve switched the view to Analytics mode.' })
-        controller.close()
-        return
-      }
-
-      // Scenario 3: User asks for something requiring approval (Human-in-the-loop)
-      if (lastMessage.content.toLowerCase().includes('deploy')) {
-        sendEvent({ type: 'token', content: 'I can help with that deployment.\n' })
-        await new Promise(r => setTimeout(r, 800))
-        
-        // Tool call requiring approval
-        sendEvent({
-          type: 'tool_call',
-          tool: 'deploy_production',
-          toolCallId: `call_${Date.now()}`,
-          params: { environment: 'production', version: 'v2.0.1' },
-          needsApproval: true,
-          metadata: { description: 'Deploy v2.0.1 to Production' }
-        })
-        
-        // Note: In a real LangGraph, the stream would pause here (interrupt)
-        // We simulate the pause by ending the stream, waiting for the client to call back with approval
-        controller.close()
-        return
-      }
-
-      // Default: Standard chat response
-      const text = "I'm a simulated LangGraph agent. You can ask me to:\n1. 'Update dashboard' (Changes external view)\n2. 'Deploy to production' (Triggers approval flow)"
-      const tokens = text.split(' ')
-      
-      for (const token of tokens) {
-        sendEvent({ type: 'token', content: token + ' ' })
-        await new Promise(r => setTimeout(r, 50))
-      }
-      
-      controller.close()
-    }
-  })
-
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
     },
+  }),
+
+  analyze_spending: tool({
+    description: "Analyze spending patterns and trends over a time period",
+    inputSchema: z.object({
+      period: z.string().optional().describe("Time period to analyze (week, month, year)"),
+    }),
+    execute: async ({ period = "month" }) => {
+      console.log("[v0] Executing analyze_spending", { period })
+
+      // Mock analysis - replace with actual calculations
+      return {
+        total: 2450.75,
+        average: 81.69,
+        trend: "increasing",
+        comparison: "up 12% from last month",
+        period,
+      }
+    },
+  }),
+
+  get_budget_status: tool({
+    description: "Get current budget status across all categories",
+    inputSchema: z.object({}),
+    execute: async () => {
+      console.log("[v0] Executing get_budget_status")
+
+      // Mock budget data - replace with actual budget tracking
+      return {
+        budgets: [
+          { category: "Food", limit: 500, spent: 425.8, percentage: 85 },
+          { category: "Transport", limit: 200, spent: 145.25, percentage: 73 },
+          { category: "Entertainment", limit: 150, spent: 98.5, percentage: 66 },
+          { category: "Shopping", limit: 300, spent: 345.2, percentage: 115 },
+        ],
+      }
+    },
+  }),
+
+  get_category_breakdown: tool({
+    description: "Get spending breakdown by category",
+    inputSchema: z.object({
+      period: z.string().optional().describe("Time period for breakdown (week, month, year)"),
+    }),
+    execute: async ({ period = "month" }) => {
+      console.log("[v0] Executing get_category_breakdown", { period })
+
+      // Mock category data - replace with actual aggregation
+      return {
+        categories: [
+          { name: "Food", amount: 425.8 },
+          { name: "Transport", amount: 145.25 },
+          { name: "Shopping", amount: 345.2 },
+          { name: "Entertainment", amount: 98.5 },
+          { name: "Utilities", amount: 220.0 },
+        ],
+        period,
+      }
+    },
+  }),
+}
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json()
+
+  const prompt = convertToModelMessages(messages)
+
+  const result = streamText({
+    model: anthropic("claude-sonnet-4-5-20250929"),
+    prompt,
+    system: `You are an expense tracking AI assistant. You help users understand their spending patterns, manage budgets, and make financial decisions.
+
+You have access to several tools to query expense data:
+- get_recent_expenses: Show recent transactions
+- analyze_spending: Analyze spending trends and patterns
+- get_budget_status: Check budget status across categories
+- get_category_breakdown: Show spending by category
+
+When users ask about their expenses, you should:
+1. Use the appropriate tools to gather data
+2. Call multiple tools in sequence if needed to provide comprehensive insights
+3. Provide clear, actionable insights based on the data
+
+For example, if a user asks "How am I doing with my spending?", you should:
+1. Call get_recent_expenses to show recent transactions
+2. Call analyze_spending to show trends
+3. Call get_budget_status to check if they're over budget
+
+Always be helpful, concise, and focus on actionable insights.`,
+    tools,
+    maxOutputTokens: 2000,
+    abortSignal: req.signal,
   })
+
+  return result.toUIMessageStreamResponse()
 }
