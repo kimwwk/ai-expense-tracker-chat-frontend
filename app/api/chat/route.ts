@@ -1,5 +1,5 @@
 import { openai } from "@ai-sdk/openai"
-import { streamText, tool } from "ai"
+import { streamText, tool, convertToModelMessages, stepCountIs } from "ai"
 import { z } from "zod"
 import { expenseDatabase, budgetData } from "@/lib/data"
 
@@ -125,25 +125,29 @@ const tools = {
 export async function POST(req: Request) {
   const { messages } = await req.json()
 
+  // Convert UIMessages to ModelMessages for compatibility with streamText
+  const modelMessages = convertToModelMessages(messages)
+
   const result = streamText({
-    model: openai("gpt-4o"),
+    model: openai("gpt-5.1"),
     system: `You are an intelligent expense assistant. You have access to tools to manage and view expenses.
-    
+
     CRITICAL INSTRUCTION:
-    When the user asks for information, use the appropriate tools. 
-    You often need to use multiple tools to give a complete answer. 
+    When the user asks for information, use the appropriate tools.
+    You often need to use multiple tools to give a complete answer.
     For example, if asked for a "summary", use getSpendingSummary.
     If asked for "expenses", use getExpenses.
-    
-    The frontend is designed to render "Widgets" based on the data you return. 
-    So, prefer calling tools that return structured data (like getExpenses, analyzeSpending) 
+
+    The frontend is designed to render "Widgets" based on the data you return.
+    So, prefer calling tools that return structured data (like getExpenses, analyzeSpending)
     over just summarizing it in text if the user wants to "see" the data.
-    
+
     However, you MUST still provide a helpful text response summarizing the findings.
     `,
-    messages,
+    messages: modelMessages,
     tools,
-    maxSteps: 5,
+    stopWhen: stepCountIs(10),
+    toolChoice: 'auto'
   })
 
   return result.toUIMessageStreamResponse()

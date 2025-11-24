@@ -1,0 +1,119 @@
+"use client"
+
+import { useEffect, useRef } from "react"
+import { Bot, Trash2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { ChatMessage } from "./chat-message"
+import { ChatInput } from "./chat-input"
+
+interface ChatInterfaceProps {
+  messages: any[]
+  input: string
+  isLoading: boolean
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
+  onClearSession: () => void
+  onSendMessage?: any
+}
+
+export function ChatInterface({
+  messages,
+  input,
+  isLoading,
+  onInputChange,
+  onSubmit,
+  onClearSession,
+  onSendMessage,
+}: ChatInterfaceProps) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll chat
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [messages])
+
+  return (
+    <div className="w-[450px] flex flex-col border-r shadow-sm z-10">
+      {/* Header */}
+      <div className="h-14 border-b flex items-center justify-between px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <h1 className="font-semibold text-sm flex items-center gap-2">
+          <Bot className="h-4 w-4" />
+          AI Expense Assistant
+          {messages.length}
+        </h1>
+        <Button variant="ghost" size="icon" onClick={onClearSession} title="Clear Session">
+          <Trash2 className="h-4 w-4 text-muted-foreground" />
+        </Button>
+      </div>
+
+      {/* Messages */}
+      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+        <div className="space-y-4 max-w-full">
+          {messages.length === 0 && (
+            <div className="text-center text-muted-foreground text-sm my-10 space-y-2">
+              <p>Try asking:</p>
+              <div className="flex flex-col gap-2 items-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    onSendMessage({
+                      role: "user",
+                      parts: [{ type: "text", text: "Show me all my food expenses" }],
+                    })
+                  }}
+                >
+                  "Show me food expenses"
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    onSendMessage({
+                      role: "user",
+                      parts: [{ type: "text", text: "Analyze my spending for Food" }],
+                    })
+                  }}
+                >
+                  "Analyze Food budget"
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    onSendMessage({
+                      role: "user",
+                      parts: [{ type: "text", text: "Give me a summary of my spending" }],
+                    })
+                  }}
+                >
+                  "Spending Summary"
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {messages.map((m: any) => (
+            <ChatMessage key={m.id} message={m} />
+          ))}
+
+          {isLoading && messages[messages.length - 1]?.role === "user" && (
+            <div className="flex justify-start">
+              <div className="bg-muted rounded-lg px-4 py-2 text-sm text-muted-foreground animate-pulse">
+                Thinking...
+              </div>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+
+      {/* Input */}
+      <div className="p-4 border-t bg-background">
+        <ChatInput input={input} isLoading={isLoading} onInputChange={onInputChange} onSubmit={onSubmit} />
+      </div>
+    </div>
+  )
+}

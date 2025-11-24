@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { Message } from "ai"
+import type { UIMessage } from "ai"
 import type { Widget } from "@/types/widget"
 
-export function useWidgetManager(messages: Message[]) {
+export function useWidgetManager(messages: UIMessage[]) {
   const [widgets, setWidgets] = useState<Widget[]>([])
   const [activeTab, setActiveTab] = useState<string>("overview")
 
@@ -12,44 +12,55 @@ export function useWidgetManager(messages: Message[]) {
     // Scan messages for tool invocations that have results
     const newWidgets: Widget[] = []
 
-    // Reverse iterate to find latest tool calls, but we want to accumulate all unique ones
-    messages.forEach((m) => {
-      if (m.role === "assistant" && m.toolInvocations) {
-        m.toolInvocations.forEach((tool) => {
-          if ("result" in tool && tool.result) {
-            // Map tool names to widget types
-            let widgetType: Widget["type"] | null = null
-            let title = "Widget"
+    // Iterate through messages to find tool calls with results
+    // @ai-sdk/react v2 uses parts array instead of toolInvocations
+    messages.forEach((m: any) => {
+      if (m.role === "assistant" && m.parts) {
+        // Filter parts for tool invocations with results
+        // Tool parts have typed names like "tool-getExpenses", "tool-analyzeSpending", etc.
+        const toolParts = m.parts.filter(
+          (part: any) =>
+            part.type?.startsWith("tool-") &&
+            (part.state === "output-available" || part.state === "result" || part.state === "done") &&
+            (part.output || part.result)
+        )
 
-            switch (tool.toolName) {
-              case "getExpenses":
-                widgetType = "expense-list"
-                title = "Expenses"
-                break
-              case "analyzeSpending":
-                widgetType = "spending-analysis"
-                title = `Analysis: ${tool.args.category || "General"}`
-                break
-              case "getSpendingSummary":
-                widgetType = "summary-chart"
-                title = "Summary"
-                break
-              // Add more mappings as needed
-            }
+        toolParts.forEach((tool: any) => {
+          // Extract tool name from typed part (e.g., "tool-getExpenses" -> "getExpenses")
+          const toolName = tool.type?.startsWith("tool-") ? tool.type.substring(5) : tool.toolName
 
-            if (widgetType) {
-              // Check if we already have this specific widget (deduplication based on toolCallId)
-              const existingIndex = newWidgets.findIndex((w) => w.id === tool.toolCallId)
+          // Map tool names to widget types
+          let widgetType: Widget["type"] | null = null
+          let title = "Widget"
 
-              if (existingIndex === -1) {
-                newWidgets.push({
-                  id: tool.toolCallId,
-                  type: widgetType,
-                  title,
-                  data: tool.result,
-                  timestamp: Date.now(), // You might want to use message createdAt if available
-                })
-              }
+          switch (toolName) {
+            case "getExpenses":
+              widgetType = "expense-list"
+              title = "Expenses"
+              break
+            case "analyzeSpending":
+              widgetType = "spending-analysis"
+              title = `Analysis: ${tool.args?.category || "General"}`
+              break
+            case "getSpendingSummary":
+              widgetType = "summary-chart"
+              title = "Summary"
+              break
+            // Add more mappings as needed
+          }
+
+          if (widgetType) {
+            // Check if we already have this specific widget (deduplication based on toolCallId)
+            const existingIndex = newWidgets.findIndex((w) => w.id === tool.toolCallId)
+
+            if (existingIndex === -1) {
+              newWidgets.push({
+                id: tool.toolCallId,
+                type: widgetType,
+                title,
+                data: tool.output || tool.result, // Support both output and result properties
+                timestamp: Date.now(), // You might want to use message createdAt if available
+              })
             }
           }
         })
