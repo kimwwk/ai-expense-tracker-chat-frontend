@@ -34,9 +34,9 @@ export function useWidgetManager(messages: UIMessage[]) {
           let title = "Widget"
 
           switch (toolName) {
-            case "getExpenses":
-              widgetType = "expense-list"
-              title = "Expenses"
+            case "getTransactions":
+              widgetType = "transaction-list"
+              title = "Transactions"
               break
             case "analyzeSpending":
               widgetType = "spending-analysis"

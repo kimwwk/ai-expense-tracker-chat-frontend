@@ -45,7 +45,7 @@ export default function Page() {
     if (widgets.length > prevWidgetCountRef.current) {
       const lastWidget = widgets[widgets.length - 1]
       if (lastWidget.type === "summary-chart") setActiveTab("overview")
-      if (lastWidget.type === "expense-list") setActiveTab("expenses")
+      if (lastWidget.type === "transaction-list") setActiveTab("transactions")
       if (lastWidget.type === "spending-analysis") setActiveTab("analysis")
     }
     prevWidgetCountRef.current = widgets.length

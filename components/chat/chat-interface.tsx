@@ -41,8 +41,7 @@ export function ChatInterface({
       <div className="h-14 border-b flex items-center justify-between px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <h1 className="font-semibold text-sm flex items-center gap-2">
           <Bot className="h-4 w-4" />
-          AI Expense Assistant
-          {messages.length}
+          AI Transaction Assistant
         </h1>
         <Button variant="ghost" size="icon" onClick={onClearSession} title="Clear Session">
           <Trash2 className="h-4 w-4 text-muted-foreground" />
@@ -62,11 +61,11 @@ export function ChatInterface({
                   onClick={() => {
                     onSendMessage({
                       role: "user",
-                      parts: [{ type: "text", text: "Show me all my food expenses" }],
+                      parts: [{ type: "text", text: "Show me all my transactions" }],
                     })
                   }}
                 >
-                  "Show me food expenses"
+                  "Show all transactions"
                 </Button>
                 <Button
                   variant="outline"
@@ -74,11 +73,11 @@ export function ChatInterface({
                   onClick={() => {
                     onSendMessage({
                       role: "user",
-                      parts: [{ type: "text", text: "Analyze my spending for Food" }],
+                      parts: [{ type: "text", text: "Show me debit transactions" }],
                     })
                   }}
                 >
-                  "Analyze Food budget"
+                  "Show debit transactions"
                 </Button>
                 <Button
                   variant="outline"
@@ -86,11 +85,11 @@ export function ChatInterface({
                   onClick={() => {
                     onSendMessage({
                       role: "user",
-                      parts: [{ type: "text", text: "Give me a summary of my spending" }],
+                      parts: [{ type: "text", text: "Show me credit transactions" }],
                     })
                   }}
                 >
-                  "Spending Summary"
+                  "Show credit transactions"
                 </Button>
               </div>
             </div>
