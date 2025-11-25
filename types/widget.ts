@@ -2,7 +2,7 @@
  * Valid widget types that can be rendered in the dashboard.
  * Add new types here when creating new widget components.
  */
-export type WidgetType = "transaction-list" | "spending-analysis" | "summary-chart" | "generic-json"
+export type WidgetType = "transaction-list" | "spending-analysis" | "summary-chart" | "account-list" | "category-list" | "generic-json"
 
 /**
  * Widget instance data structure.

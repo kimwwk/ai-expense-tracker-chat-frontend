@@ -1,16 +1,51 @@
 "use client"
 
-import type { Widget } from "@/types/widget"
+import type { Widget, WidgetType } from "@/types/widget"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TransactionListWidget } from "@/components/widgets/transaction-list-widget"
 import { SpendingAnalysisWidget } from "@/components/widgets/spending-analysis-widget"
 import { SummaryChartWidget } from "@/components/widgets/summary-chart-widget"
-import { LayoutDashboard, Activity } from "lucide-react"
+import { AccountListWidget } from "@/components/widgets/account-list-widget"
+import { CategoryListWidget } from "@/components/widgets/category-list-widget"
+import { LayoutDashboard, Activity, Receipt, PieChart, BarChart3, Wallet, Tag } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 
 interface DashboardProps {
   widgets: Widget[]
   activeTab: string
   onTabChange: (value: string) => void
+}
+
+// Map widget types to display labels and icons
+const widgetTypeMap: Record<WidgetType, { label: string; icon: LucideIcon }> = {
+  "transaction-list": { label: "Transactions", icon: Receipt },
+  "spending-analysis": { label: "Analysis", icon: PieChart },
+  "summary-chart": { label: "Summary", icon: BarChart3 },
+  "account-list": { label: "Accounts", icon: Wallet },
+  "category-list": { label: "Categories", icon: Tag },
+  "generic-json": { label: "Data", icon: LayoutDashboard },
+}
+
+// Helper function to render widgets based on type
+function renderWidget(widget: Widget) {
+  switch (widget.type) {
+    case "transaction-list":
+      return <TransactionListWidget data={widget.data} />
+    case "spending-analysis":
+      return (
+        <div className="p-6">
+          <SpendingAnalysisWidget data={widget.data} />
+        </div>
+      )
+    case "summary-chart":
+      return <SummaryChartWidget data={widget.data} />
+    case "account-list":
+      return <AccountListWidget data={widget.data} />
+    case "category-list":
+      return <CategoryListWidget data={widget.data} />
+    default:
+      return <div className="p-8 text-muted-foreground">Unknown widget type: {widget.type}</div>
+  }
 }
 
 export function Dashboard({ widgets, activeTab, onTabChange }: DashboardProps) {
@@ -27,28 +62,19 @@ export function Dashboard({ widgets, activeTab, onTabChange }: DashboardProps) {
     )
   }
 
-  // Group widgets by type or just list them as tabs?
-  // The user asked for "tabs for each widget".
-  // If we have many tool calls, we might have too many tabs.
-  // Let's create specific tabs for specific VIEWS, and put the latest widget of that type in there.
+  // Get unique widget types present in widgets array
+  const availableTypes = [...new Set(widgets.map((w) => w.type))]
 
-  // Strategy:
-  // 1. "Overview" tab (always present if data exists) - Shows Summary Chart
-  // 2. "Transactions" tab - Shows latest Transaction List
-  // 3. "Analysis" tab - Shows latest Analysis
-  // 4. "History" - List of all widgets?
+  // For each type, get the latest widget
+  const widgetsByType = availableTypes.map((type) => ({
+    type,
+    widget: widgets.filter((w) => w.type === type).pop()!,
+    label: widgetTypeMap[type]?.label || type,
+    icon: widgetTypeMap[type]?.icon || LayoutDashboard,
+  }))
 
-  // Let's go with the user's "tabs for each widget" but simplified:
-  // We will map available widget types to tabs.
-
-  const hasTransactions = widgets.some((w) => w.type === "transaction-list")
-  const hasAnalysis = widgets.some((w) => w.type === "spending-analysis")
-  const hasSummary = widgets.some((w) => w.type === "summary-chart")
-
-  // Find latest data for each
-  const latestTransactions = widgets.filter((w) => w.type === "transaction-list").pop()
-  const latestAnalysis = widgets.filter((w) => w.type === "spending-analysis").pop()
-  const latestSummary = widgets.filter((w) => w.type === "summary-chart").pop()
+  // Default to first available widget type if activeTab doesn't exist
+  const defaultTab = widgetsByType[0]?.type || ""
 
   return (
     <div className="h-full flex flex-col border-l bg-muted/10">
@@ -60,56 +86,22 @@ export function Dashboard({ widgets, activeTab, onTabChange }: DashboardProps) {
       </div>
 
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
-        <Tabs defaultValue="overview" value={activeTab} onValueChange={onTabChange} className="h-full flex flex-col">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="overview" disabled={!hasSummary && !hasTransactions && !hasAnalysis}>
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="transactions" disabled={!hasTransactions}>
-              Transactions
-            </TabsTrigger>
-            <TabsTrigger value="analysis" disabled={!hasAnalysis}>
-              Analysis
-            </TabsTrigger>
+        <Tabs defaultValue={defaultTab} value={activeTab} onValueChange={onTabChange} className="h-full flex flex-col">
+          <TabsList className="w-full mb-4">
+            {widgetsByType.map(({ type, label, icon: Icon }) => (
+              <TabsTrigger key={type} value={type} className="gap-2">
+                <Icon className="h-4 w-4" />
+                {label}
+              </TabsTrigger>
+            ))}
           </TabsList>
 
           <div className="flex-1 overflow-auto rounded-lg border bg-background shadow-sm">
-            {/* Fallback for empty tabs if selected manually */}
-            {!hasSummary && !hasTransactions && !hasAnalysis && (
-              <div className="h-full flex items-center justify-center text-muted-foreground">No data loaded yet</div>
-            )}
-
-            <TabsContent value="overview" className="h-full m-0 p-0">
-              {latestSummary ? (
-                <SummaryChartWidget data={latestSummary.data} />
-              ) : latestTransactions ? (
-                <TransactionListWidget data={latestTransactions.data} />
-              ) : latestAnalysis ? (
-                <SpendingAnalysisWidget data={latestAnalysis.data} />
-              ) : (
-                <div className="p-8 text-center text-muted-foreground">
-                  Ask for a summary to see the overview chart.
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="transactions" className="h-full m-0 p-0">
-              {latestTransactions ? (
-                <TransactionListWidget data={latestTransactions.data} />
-              ) : (
-                <div className="p-8 text-center text-muted-foreground">No transaction lists loaded.</div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="analysis" className="h-full m-0 p-0">
-              {latestAnalysis ? (
-                <div className="p-6">
-                  <SpendingAnalysisWidget data={latestAnalysis.data} />
-                </div>
-              ) : (
-                <div className="p-8 text-center text-muted-foreground">No analysis loaded.</div>
-              )}
-            </TabsContent>
+            {widgetsByType.map(({ type, widget }) => (
+              <TabsContent key={type} value={type} className="h-full m-0 p-0">
+                {renderWidget(widget)}
+              </TabsContent>
+            ))}
           </div>
         </Tabs>
       </div>

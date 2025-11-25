@@ -11,6 +11,7 @@ interface ChatInterfaceProps {
   messages: any[]
   input: string
   isLoading: boolean
+  status?: "submitted" | "streaming" | "ready" | "error"
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
   onClearSession: () => void
@@ -21,6 +22,7 @@ export function ChatInterface({
   messages,
   input,
   isLoading,
+  status = "ready",
   onInputChange,
   onSubmit,
   onClearSession,
@@ -35,6 +37,23 @@ export function ChatInterface({
     }
   }, [messages])
 
+  // Status indicator configuration
+  const getStatusConfig = () => {
+    switch (status) {
+      case "streaming":
+        return { color: "bg-blue-500", text: "Streaming", animate: "animate-pulse" }
+      case "submitted":
+        return { color: "bg-yellow-500", text: "Processing", animate: "animate-pulse" }
+      case "error":
+        return { color: "bg-red-500", text: "Error", animate: "" }
+      case "ready":
+      default:
+        return { color: "bg-green-500", text: "Ready", animate: "" }
+    }
+  }
+
+  const statusConfig = getStatusConfig()
+
   return (
     <div className="w-[450px] h-full flex flex-col border-r shadow-sm z-10">
       {/* Header */}
@@ -42,6 +61,10 @@ export function ChatInterface({
         <h1 className="font-semibold text-sm flex items-center gap-2">
           <Bot className="h-4 w-4" />
           AI Transaction Assistant
+          <span className="flex items-center gap-1.5 ml-2">
+            <span className={`h-2 w-2 rounded-full ${statusConfig.color} ${statusConfig.animate}`} />
+            <span className="text-xs text-muted-foreground font-normal">{statusConfig.text}</span>
+          </span>
         </h1>
         <Button variant="ghost" size="icon" onClick={onClearSession} title="Clear Session">
           <Trash2 className="h-4 w-4 text-muted-foreground" />

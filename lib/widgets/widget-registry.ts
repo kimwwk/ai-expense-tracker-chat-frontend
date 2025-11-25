@@ -76,10 +76,42 @@ export const widgetRegistry: WidgetRegistry = {
     },
   },
 
+  /**
+   * Account list tool
+   * Displays all accounts with balances and details
+   */
+  getAccounts: {
+    widgetType: "account-list",
+    title: "Accounts",
+    metadata: {
+      description: "Display list of accounts with balances",
+      category: "accounts",
+      icon: "wallet",
+      autoFocus: true,
+    },
+  },
+
+  /**
+   * Category list tool
+   * Displays all transaction categories organized by type
+   */
+  getCategories: {
+    widgetType: "category-list",
+    title: "Categories",
+    metadata: {
+      description: "Display list of transaction categories",
+      category: "categories",
+      icon: "tag",
+      autoFocus: true,
+    },
+  },
+
   // Note: The following tools do NOT have widget mappings (by design):
   // - addTransaction: Just adds a transaction, no visualization needed
   // - getTableNames: Schema inspection tool, no widget needed
   // - getTableSchema: Schema inspection tool, no widget needed
+  // - createAccount, updateAccount, deleteAccount: CRUD operations, no visualization needed
+  // - createCategory, updateCategory, deleteCategory: CRUD operations, no visualization needed
 
   // Future MCP tools can be added here following the same pattern
   // Example (commented out):

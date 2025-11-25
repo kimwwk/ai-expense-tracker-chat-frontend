@@ -7,11 +7,12 @@ import { getWidgetConfig } from "@/lib/widgets/widget-registry"
 
 export function useWidgetManager(messages: UIMessage[]) {
   const [widgets, setWidgets] = useState<Widget[]>([])
-  const [activeTab, setActiveTab] = useState<string>("overview")
+  const [activeTab, setActiveTab] = useState<string>("")
 
   useEffect(() => {
     // Scan messages for tool invocations that have results
     const newWidgets: Widget[] = []
+    let latestWidgetType: string | null = null
 
     // Iterate through messages to find tool calls with results
     // @ai-sdk/react v2 uses parts array instead of toolInvocations
@@ -38,37 +39,45 @@ export function useWidgetManager(messages: UIMessage[]) {
             return
           }
 
-          const { widgetType, title } = config
+          const { widgetType, title, metadata } = config
 
           // Check if we already have this specific widget (deduplication based on toolCallId)
           const existingIndex = newWidgets.findIndex((w) => w.id === tool.toolCallId)
 
           if (existingIndex === -1) {
-            newWidgets.push({
+            const newWidget = {
               id: tool.toolCallId,
               type: widgetType,
               title,
               data: tool.output || tool.result, // Support both output and result properties
               timestamp: Date.now(), // You might want to use message createdAt if available
-            })
+            }
+            newWidgets.push(newWidget)
+
+            // Track the latest widget type for auto-focus
+            // Only auto-focus if metadata says autoFocus is true
+            if (metadata?.autoFocus !== false) {
+              latestWidgetType = widgetType
+            }
           }
         })
       }
     })
 
     // If new widgets were found, update state
-    // We only update if the length changed or IDs changed to avoid loops,
-    // but React's set state is smart enough usually.
-    // For this demo, let's just set it if count matches.
-    // Ideally we merge with existing to preserve local state if widgets were interactive.
     if (newWidgets.length > 0) {
       setWidgets(newWidgets)
+
+      // Auto-focus to the latest widget type if it's new
+      if (latestWidgetType) {
+        setActiveTab(latestWidgetType)
+      }
     }
   }, [messages])
 
   const clearWidgets = () => {
     setWidgets([])
-    setActiveTab("overview")
+    setActiveTab("")
   }
 
   return {

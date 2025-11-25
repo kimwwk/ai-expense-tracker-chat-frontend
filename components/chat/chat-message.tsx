@@ -59,8 +59,8 @@ function ToolPartDisplay({ toolPart }: ToolPartDisplayProps) {
             <span className="font-medium">Input</span>
           </button>
           {inputExpanded && (
-            <pre className="mt-1 text-xs bg-secondary/30 rounded p-2 overflow-x-auto">
-              {JSON.stringify(toolPart.input, null, 2)}
+            <pre className="mt-1 text-xs bg-secondary/30 rounded p-2 overflow-x-auto max-w-full">
+              <code className="block break-all">{JSON.stringify(toolPart.input, null, 2)}</code>
             </pre>
           )}
         </div>
@@ -77,8 +77,8 @@ function ToolPartDisplay({ toolPart }: ToolPartDisplayProps) {
             <span className="font-medium">Output</span>
           </button>
           {outputExpanded && (
-            <pre className="mt-1 text-xs bg-secondary/30 rounded p-2 overflow-x-auto">
-              {JSON.stringify(toolPart.output || toolPart.result, null, 2)}
+            <pre className="mt-1 text-xs bg-secondary/30 rounded p-2 overflow-x-auto max-w-full">
+              <code className="block break-all">{JSON.stringify(toolPart.output || toolPart.result, null, 2)}</code>
             </pre>
           )}
         </div>
@@ -117,7 +117,7 @@ function ReasoningPartDisplay({ reasoningPart }: ReasoningPartDisplayProps) {
 
       {expanded && (
         <div className="mt-2 text-xs bg-purple-500/10 rounded p-3 border border-purple-500/20">
-          <div className="whitespace-pre-wrap text-muted-foreground leading-relaxed">
+          <div className="whitespace-pre-wrap break-words text-muted-foreground leading-relaxed overflow-hidden">
             {reasoningPart.text || reasoningPart.content}
             {isStreaming && <span className="inline-block animate-pulse ml-1">▊</span>}
           </div>
@@ -165,7 +165,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
   return (
     <div className={`flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`rounded-lg px-4 py-2 max-w-[85%] text-sm ${
+        className={`rounded-lg px-4 py-2 max-w-[85%] text-sm break-words overflow-hidden ${
           isUser ? "bg-primary text-primary-foreground" : "bg-muted"
         }`}
       >

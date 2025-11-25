@@ -65,6 +65,7 @@ export default function Page() {
         messages={messages}
         input={input}
         isLoading={isLoading}
+        status={status}
         onInputChange={handleInputChange}
         onSubmit={handleSubmit}
         onClearSession={handleClearSession}

@@ -54,9 +54,6 @@ export function TransactionListWidget({ data }: TransactionListWidgetProps) {
                       <span className="text-sm font-medium truncate">
                         {transaction.description || "No description"}
                       </span>
-                      {transaction.category_id && (
-                        <span className="text-xs text-muted-foreground">Category: {transaction.category_id}</span>
-                      )}
                     </div>
                   </div>
                   <span
