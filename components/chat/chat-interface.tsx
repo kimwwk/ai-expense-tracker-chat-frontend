@@ -36,7 +36,7 @@ export function ChatInterface({
   }, [messages])
 
   return (
-    <div className="w-[450px] flex flex-col border-r shadow-sm z-10">
+    <div className="w-[450px] h-full flex flex-col border-r shadow-sm z-10">
       {/* Header */}
       <div className="h-14 border-b flex items-center justify-between px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <h1 className="font-semibold text-sm flex items-center gap-2">
@@ -49,8 +49,8 @@ export function ChatInterface({
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="space-y-4 max-w-full">
+      <ScrollArea className="flex-1 overflow-hidden">
+        <div className="space-y-4 max-w-full p-4">
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground text-sm my-10 space-y-2">
               <p>Try asking:</p>
