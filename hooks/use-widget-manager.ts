@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import type { UIMessage } from "ai"
 import type { Widget } from "@/types/widget"
+import { getWidgetConfig } from "@/lib/widgets/widget-registry"
 
 export function useWidgetManager(messages: UIMessage[]) {
   const [widgets, setWidgets] = useState<Widget[]>([])
@@ -29,39 +30,27 @@ export function useWidgetManager(messages: UIMessage[]) {
           // Extract tool name from typed part (e.g., "tool-getExpenses" -> "getExpenses")
           const toolName = tool.type?.startsWith("tool-") ? tool.type.substring(5) : tool.toolName
 
-          // Map tool names to widget types
-          let widgetType: Widget["type"] | null = null
-          let title = "Widget"
+          // Look up widget configuration from registry
+          const config = getWidgetConfig(toolName, tool.args)
 
-          switch (toolName) {
-            case "getTransactions":
-              widgetType = "transaction-list"
-              title = "Transactions"
-              break
-            case "analyzeSpending":
-              widgetType = "spending-analysis"
-              title = `Analysis: ${tool.args?.category || "General"}`
-              break
-            case "getSpendingSummary":
-              widgetType = "summary-chart"
-              title = "Summary"
-              break
-            // Add more mappings as needed
+          // Skip tools that don't have widget mappings
+          if (!config) {
+            return
           }
 
-          if (widgetType) {
-            // Check if we already have this specific widget (deduplication based on toolCallId)
-            const existingIndex = newWidgets.findIndex((w) => w.id === tool.toolCallId)
+          const { widgetType, title } = config
 
-            if (existingIndex === -1) {
-              newWidgets.push({
-                id: tool.toolCallId,
-                type: widgetType,
-                title,
-                data: tool.output || tool.result, // Support both output and result properties
-                timestamp: Date.now(), // You might want to use message createdAt if available
-              })
-            }
+          // Check if we already have this specific widget (deduplication based on toolCallId)
+          const existingIndex = newWidgets.findIndex((w) => w.id === tool.toolCallId)
+
+          if (existingIndex === -1) {
+            newWidgets.push({
+              id: tool.toolCallId,
+              type: widgetType,
+              title,
+              data: tool.output || tool.result, // Support both output and result properties
+              timestamp: Date.now(), // You might want to use message createdAt if available
+            })
           }
         })
       }
@@ -74,10 +63,6 @@ export function useWidgetManager(messages: UIMessage[]) {
     // Ideally we merge with existing to preserve local state if widgets were interactive.
     if (newWidgets.length > 0) {
       setWidgets(newWidgets)
-
-      // Auto-switch to the newest widget if it's new
-      const lastWidget = newWidgets[newWidgets.length - 1]
-      // Only switch if we just added it (in a real app you'd compare vs previous ref)
     }
   }, [messages])
 
