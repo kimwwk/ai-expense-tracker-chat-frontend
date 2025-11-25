@@ -73,11 +73,11 @@ export function ChatInterface({
                   onClick={() => {
                     onSendMessage({
                       role: "user",
-                      parts: [{ type: "text", text: "Show me debit transactions" }],
+                      parts: [{ type: "text", text: "Show me food budget analysis" }],
                     })
                   }}
                 >
-                  "Show debit transactions"
+                  "Show me food budget analysis"
                 </Button>
                 <Button
                   variant="outline"
@@ -85,11 +85,11 @@ export function ChatInterface({
                   onClick={() => {
                     onSendMessage({
                       role: "user",
-                      parts: [{ type: "text", text: "Show me credit transactions" }],
+                      parts: [{ type: "text", text: "Show Spending by Category" }],
                     })
                   }}
                 >
-                  "Show credit transactions"
+                  "Show Spending by Category"
                 </Button>
               </div>
             </div>

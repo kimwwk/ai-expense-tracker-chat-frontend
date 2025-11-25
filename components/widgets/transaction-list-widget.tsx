@@ -7,7 +7,7 @@ interface Transaction {
   transaction_date: string
   description?: string | null
   amount: number
-  transaction_type: "debit" | "credit"
+  transaction_type: "expense" | "income"
   category_id?: number | null
   payee_id?: number | null
   status?: string
@@ -40,7 +40,7 @@ export function TransactionListWidget({ data }: TransactionListWidgetProps) {
             {transactions.map((transaction) => {
               const date = new Date(transaction.transaction_date)
               const formattedDate = date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
-              const isCredit = transaction.transaction_type === "credit"
+              const isCredit = transaction.transaction_type === "income"
               const displayAmount = Math.abs(transaction.amount)
 
               return (
@@ -62,7 +62,7 @@ export function TransactionListWidget({ data }: TransactionListWidgetProps) {
                   <span
                     className={cn(
                       "text-sm font-semibold flex-shrink-0 ml-2",
-                      isCredit ? "text-green-600 dark:text-green-500" : "text-foreground",
+                      isCredit ? "text-green-600 dark:text-green-500" : "text-red-600 dark:text-red-500",
                     )}
                   >
                     {isCredit ? "+" : "-"}${displayAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
