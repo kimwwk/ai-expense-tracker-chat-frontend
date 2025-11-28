@@ -7,7 +7,33 @@ import { Dashboard } from "@/components/dashboard/dashboard"
 import { ChatInterface } from "@/components/chat/chat-interface"
 import { ChangeSetProvider, useChangeSet } from "@/lib/changeset/ChangeSetContext"
 import { fetchCurrentData } from "@/lib/changeset/helpers"
+import { transformToolInput } from "@/lib/changeset/transformations"
+import { EntityType, OperationType } from "@/lib/changeset/types"
 import { useEffect, useRef, useState } from "react"
+
+/**
+ * Parse tool name to extract entity and operation
+ * Example: "createTransactionChangeRequest" -> { entity: "transaction", operation: "create" }
+ */
+function parseChangeRequestToolName(toolName: string): {
+  entity: EntityType
+  operation: OperationType
+} {
+  // Tool name pattern: {operation}{Entity}ChangeRequest
+  const match = toolName.match(/^(create|update|delete)(Transaction|Account|Category)ChangeRequest$/)
+
+  if (!match) {
+    throw new Error(`Invalid changeset tool name: ${toolName}`)
+  }
+
+  const [, operation, entityPascal] = match
+  const entity = entityPascal.toLowerCase() as EntityType
+
+  return {
+    entity,
+    operation: operation as OperationType,
+  }
+}
 
 export default function Page() {
   return (
@@ -32,34 +58,54 @@ function PageContent() {
 
       const toolName = toolCall.toolName
 
-      // Only handle client-side changeset tools (tools without execute function)
+      // Define client-side changeset tools (tools without execute function)
+      const changesetTools = [
+        // Entity-specific change request tools
+        "createTransactionChangeRequest",
+        "updateTransactionChangeRequest",
+        "deleteTransactionChangeRequest",
+        "createAccountChangeRequest",
+        "updateAccountChangeRequest",
+        "deleteAccountChangeRequest",
+        "createCategoryChangeRequest",
+        "updateCategoryChangeRequest",
+        "deleteCategoryChangeRequest",
+        // Management tools
+        "confirmChangeSet",
+        "resetChangeSet",
+      ]
+
+      // Only handle client-side changeset tools
       // For server-side tools, return to let SDK handle them
-      const clientSideTools = ["addChangeRequest", "confirmChangeSet", "resetChangeSet"]
-      if (!clientSideTools.includes(toolName)) {
+      if (!changesetTools.includes(toolName)) {
         return;
       }
 
-      // Handle client-side changeset tools
-      if (toolName === "addChangeRequest") {
+      // Handle entity-specific change request tools
+      if (toolName.endsWith("ChangeRequest")) {
         try {
-          const { entity, operation, recordId, proposedData } = toolCall.input
+          // Parse tool name to extract entity and operation
+          const { entity, operation } = parseChangeRequestToolName(toolName)
 
-          // Fetch currentData if recordId provided
+          // Transform tool input to ChangeRequest format
+          const transformed = transformToolInput(entity, operation, toolCall.input)
+
+          // Fetch currentData if recordId present (for updates/deletes)
           let currentData = null
-          if (recordId) {
-            currentData = await fetchCurrentData(entity, recordId)
+          if (transformed.recordId) {
+            currentData = await fetchCurrentData(entity, transformed.recordId)
           }
 
-          // Add to context
+          // Add to changeset context
           addChange({
-            entity,
-            operation,
-            recordId,
+            entity: transformed.entity,
+            operation: transformed.operation,
+            recordId: transformed.recordId,
             currentData,
-            proposedData,
+            proposedData: transformed.proposedData,
           })
 
-          // Manually call addToolOutput - no await to avoid deadlocks
+          // Send success response to AI
           addToolOutput({
             tool: toolName,
             toolCallId: toolCall.toolCallId,
@@ -69,7 +115,7 @@ function PageContent() {
             },
           })
         } catch (error) {
-          console.error(`Error in addChangeRequest:`, error)
+          console.error(`Error in ${toolName}:`, error)
           addToolOutput({
             tool: toolName,
             toolCallId: toolCall.toolCallId,
