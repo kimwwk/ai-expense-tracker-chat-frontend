@@ -1,6 +1,41 @@
 import { tool } from "ai"
 import { z } from "zod"
 
+/**
+ * Changeset management tools
+ *
+ * Note: The old generic addChangeRequestTool has been deprecated and replaced with
+ * entity-specific tools. See the deprecation notice below for migration guidance.
+ */
+
+/**
+ * DEPRECATED: This generic addChangeRequestTool has been replaced with entity-specific tools
+ * to enforce type safety at the schema level.
+ *
+ * The problem: This tool used prose descriptions to explain requirements, but the Zod schema
+ * marked everything as optional. This caused the AI model to send incomplete data like
+ * { "entity": "transaction", "operation": "create" } which passed schema validation but failed semantically.
+ *
+ * Migration guide:
+ * - For transaction operations:
+ *   - create + proposedData → createTransactionChangeRequest (with required fields in schema)
+ *   - update + recordId + proposedData → updateTransactionChangeRequest
+ *   - delete + recordId → deleteTransactionChangeRequest
+ *
+ * - For account operations:
+ *   - create + proposedData → createAccountChangeRequest (with required fields in schema)
+ *   - update + recordId + proposedData → updateAccountChangeRequest
+ *   - delete + recordId → deleteAccountChangeRequest
+ *
+ * - For category operations:
+ *   - create + proposedData → createCategoryChangeRequest (with required fields in schema)
+ *   - update + recordId + proposedData → updateCategoryChangeRequest
+ *   - delete + recordId → deleteCategoryChangeRequest
+ *
+ * This tool is commented out but kept for reference during the migration period.
+ * See: lib/ai/tools/changeset.transaction.tools.ts, changeset.account.tools.ts, changeset.category.tools.ts
+ */
+/*
 export const addChangeRequestTool = tool({
   description:
     "Add a single change request to the current change set. Call this multiple times to build up related changes before calling confirmChangeSet. " +
@@ -31,10 +66,11 @@ export const addChangeRequestTool = tool({
   }),
   // NO execute - client-side tool
 })
+*/
 
 export const confirmChangeSetTool = tool({
   description:
-    "Present the accumulated change set to the user for review and approval. Call this after all changes have been added via addChangeRequest.",
+    "Present the accumulated change set to the user for review and approval. Call this after all changes have been added via the entity-specific change request tools.",
   inputSchema: z.object({
     title: z.string().optional().describe("Optional title for the change set"),
     description: z.string().optional().describe("Optional description explaining the changes"),
