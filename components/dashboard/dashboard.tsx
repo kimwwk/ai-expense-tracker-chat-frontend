@@ -7,7 +7,8 @@ import { SpendingAnalysisWidget } from "@/components/widgets/spending-analysis-w
 import { SummaryChartWidget } from "@/components/widgets/summary-chart-widget"
 import { AccountListWidget } from "@/components/widgets/account-list-widget"
 import { CategoryListWidget } from "@/components/widgets/category-list-widget"
-import { LayoutDashboard, Activity, Receipt, PieChart, BarChart3, Wallet, Tag } from "lucide-react"
+import { ChangeSetWidget } from "@/components/widgets/changeset-widget"
+import { LayoutDashboard, Activity, Receipt, PieChart, BarChart3, Wallet, Tag, CheckSquare } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
 interface DashboardProps {
@@ -23,6 +24,7 @@ const widgetTypeMap: Record<WidgetType, { label: string; icon: LucideIcon }> = {
   "summary-chart": { label: "Summary", icon: BarChart3 },
   "account-list": { label: "Accounts", icon: Wallet },
   "category-list": { label: "Categories", icon: Tag },
+  "changeset": { label: "Changes", icon: CheckSquare },
   "generic-json": { label: "Data", icon: LayoutDashboard },
 }
 
@@ -43,6 +45,12 @@ function renderWidget(widget: Widget) {
       return <AccountListWidget data={widget.data} />
     case "category-list":
       return <CategoryListWidget data={widget.data} />
+    case "changeset":
+      return (
+        <div className="p-6">
+          <ChangeSetWidget />
+        </div>
+      )
     default:
       return <div className="p-8 text-muted-foreground">Unknown widget type: {widget.type}</div>
   }

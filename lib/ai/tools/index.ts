@@ -7,9 +7,10 @@ import { getTableNamesTool, getTableSchemaTool } from "./schema.tools"
 import { createAccountTool, getAccountsTool, getAccountTool, updateAccountTool, deleteAccountTool } from "./account.tools"
 import { createCategoryTool, getCategoriesTool, getCategoryTool, updateCategoryTool, deleteCategoryTool } from "./category.tools"
 import { getAccountTypesTool, getCurrenciesTool } from "./reference.tools"
+import { addChangeRequestTool, confirmChangeSetTool, resetChangeSetTool } from "./changeset.tools"
 
 export const tools = {
-  addTransaction: addTransactionTool,
+  // addTransaction: addTransactionTool,
   getTransactions: getTransactionsTool,
   updateTransaction: updateTransactionTool,
   deleteTransaction: deleteTransactionTool,
@@ -29,4 +30,7 @@ export const tools = {
   deleteCategory: deleteCategoryTool,
   getAccountTypes: getAccountTypesTool,
   getCurrencies: getCurrenciesTool,
+  addChangeRequest: addChangeRequestTool,
+  confirmChangeSet: confirmChangeSetTool,
+  resetChangeSet: resetChangeSetTool,
 }

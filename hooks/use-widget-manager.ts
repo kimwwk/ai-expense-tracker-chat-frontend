@@ -1,89 +1,198 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import type { UIMessage } from "ai"
 import type { Widget } from "@/types/widget"
 import { getWidgetConfig } from "@/lib/widgets/widget-registry"
+import {
+  processMessagesForWidgets,
+  type CreateWidgetInput,
+} from "@/lib/widgets/message-processor"
 
+/**
+ * Widget Manager Hook - Manages widget state with both reactive and imperative patterns.
+ *
+ * This hook provides a hybrid approach to widget management:
+ * - **Reactive**: Automatically processes messages and creates widgets for server-side tools
+ * - **Imperative**: Provides addWidget() API for client-side tools to create widgets manually
+ *
+ * @param messages - Array of UIMessage from @ai-sdk/react useChat hook
+ * @returns Widget manager API with state and control methods
+ *
+ * @example
+ * ```typescript
+ * const { widgets, addWidget, activeTab, setActiveTab } = useWidgetManager(messages)
+ *
+ * // Client-side tool can create widget imperatively
+ * addWidget({
+ *   id: toolCallId,
+ *   toolName: "confirmChangeSet",
+ *   data: null,
+ *   autoFocus: true
+ * })
+ * ```
+ */
 export function useWidgetManager(messages: UIMessage[]) {
-  const [widgets, setWidgets] = useState<Widget[]>([])
+  // Internal state: Map for O(1) lookups and efficient deduplication
+  const [widgetMap, setWidgetMap] = useState<Map<string, Widget>>(new Map())
   const [activeTab, setActiveTab] = useState<string>("")
 
+  // Use a ref to track the latest widgetMap without causing re-renders
+  const widgetMapRef = useRef(widgetMap)
   useEffect(() => {
-    // Scan messages for tool invocations that have results
-    const newWidgets: Widget[] = []
-    let latestWidgetType: string | null = null
+    widgetMapRef.current = widgetMap
+  }, [widgetMap])
 
-    // Iterate through messages to find tool calls with results
-    // @ai-sdk/react v2 uses parts array instead of toolInvocations
-    messages.forEach((m: any) => {
-      if (m.role === "assistant" && m.parts) {
-        // Filter parts for tool invocations with results
-        // Tool parts have typed names like "tool-getExpenses", "tool-analyzeSpending", etc.
-        const toolParts = m.parts.filter(
-          (part: any) =>
-            part.type?.startsWith("tool-") &&
-            (part.state === "output-available" || part.state === "result" || part.state === "done") &&
-            (part.output || part.result)
-        )
+  // Derived state: Array for backward compatibility with consumers
+  // Sorted by timestamp to maintain consistent order
+  const widgets = useMemo(
+    () =>
+      Array.from(widgetMap.values()).sort((a, b) => a.timestamp - b.timestamp),
+    [widgetMap]
+  )
 
-        toolParts.forEach((tool: any) => {
-          // Extract tool name from typed part (e.g., "tool-getExpenses" -> "getExpenses")
-          const toolName = tool.type?.startsWith("tool-") ? tool.type.substring(5) : tool.toolName
-
-          // Look up widget configuration from registry
-          const config = getWidgetConfig(toolName, tool.args)
-
-          // Skip tools that don't have widget mappings
-          if (!config) {
-            return
-          }
-
-          const { widgetType, title, metadata } = config
-
-          // Check if we already have this specific widget (deduplication based on toolCallId)
-          const existingIndex = newWidgets.findIndex((w) => w.id === tool.toolCallId)
-
-          if (existingIndex === -1) {
-            const newWidget = {
-              id: tool.toolCallId,
-              type: widgetType,
-              title,
-              data: tool.output || tool.result, // Support both output and result properties
-              timestamp: Date.now(), // You might want to use message createdAt if available
-            }
-            newWidgets.push(newWidget)
-
-            // Track the latest widget type for auto-focus
-            // Only auto-focus if metadata says autoFocus is true
-            if (metadata?.autoFocus !== false) {
-              latestWidgetType = widgetType
-            }
-          }
-        })
+  /**
+   * Add a widget imperatively.
+   *
+   * Creates a new widget if one with the given ID doesn't exist.
+   * Uses the widget registry to look up configuration and create the widget.
+   *
+   * @param input - Widget creation parameters
+   * @returns The widget ID (same as input.id)
+   *
+   * @example
+   * ```typescript
+   * // Create widget before tool output exists (client-side tool pattern)
+   * addWidget({
+   *   id: toolCall.toolCallId,
+   *   toolName: "confirmChangeSet",
+   *   toolArgs: toolCall.input,
+   *   data: null,
+   *   autoFocus: true
+   * })
+   * ```
+   */
+  const addWidget = useCallback((input: CreateWidgetInput) => {
+    setWidgetMap((prev) => {
+      // Check for duplicates - idempotent operation
+      if (prev.has(input.id)) {
+        console.log(`Widget ${input.id} already exists, skipping creation`)
+        return prev
       }
+
+      // Look up widget config from registry
+      const config = getWidgetConfig(input.toolName, input.toolArgs)
+      if (!config) {
+        console.warn(`No widget config found for tool: ${input.toolName}`)
+        return prev
+      }
+
+      // Create widget
+      const widget: Widget = {
+        id: input.id,
+        type: config.widgetType,
+        title: config.title,
+        data: input.data ?? null,
+        timestamp: Date.now(),
+      }
+
+      // Auto-focus if requested
+      // Priority: explicit parameter > registry metadata > default (true)
+      const shouldAutoFocus =
+        input.autoFocus ?? config.metadata?.autoFocus ?? true
+      if (shouldAutoFocus) {
+        setActiveTab(config.widgetType)
+      }
+
+      // Add to map and return new map
+      return new Map(prev).set(input.id, widget)
     })
 
-    // If new widgets were found, update state
-    if (newWidgets.length > 0) {
-      setWidgets(newWidgets)
+    return input.id
+  }, [])
 
-      // Auto-focus to the latest widget type if it's new
-      if (latestWidgetType) {
-        setActiveTab(latestWidgetType)
+  /**
+   * Update an existing widget with partial data.
+   *
+   * Useful for updating widget data after it's been created imperatively
+   * with null data, then the actual data arrives from messages.
+   *
+   * @param id - Widget ID (toolCallId)
+   * @param updates - Partial widget data to merge
+   *
+   * @example
+   * ```typescript
+   * // Update widget data when message output arrives
+   * updateWidget(toolCallId, { data: outputData })
+   * ```
+   */
+  const updateWidget = useCallback((id: string, updates: Partial<Widget>) => {
+    setWidgetMap((prev) => {
+      const widget = prev.get(id)
+      if (!widget) {
+        console.warn(`Widget ${id} not found for update`)
+        return prev
       }
-    }
-  }, [messages])
+      const newMap = new Map(prev)
+      newMap.set(id, { ...widget, ...updates })
+      return newMap
+    })
+  }, [])
 
-  const clearWidgets = () => {
-    setWidgets([])
+  /**
+   * Remove a specific widget by ID.
+   *
+   * @param id - Widget ID (toolCallId)
+   */
+  const removeWidget = useCallback((id: string) => {
+    setWidgetMap((prev) => {
+      const newMap = new Map(prev)
+      newMap.delete(id)
+      return newMap
+    })
+  }, [])
+
+  /**
+   * Clear all widgets and reset active tab.
+   *
+   * Typically called when starting a new chat session.
+   */
+  const clearWidgets = useCallback(() => {
+    setWidgetMap(new Map())
     setActiveTab("")
-  }
+  }, [])
+
+  /**
+   * Check if a widget with the given ID exists.
+   *
+   * Used for deduplication in both reactive and imperative flows.
+   *
+   * @param id - Widget ID (toolCallId)
+   * @returns true if widget exists
+   */
+  const hasWidget = useCallback((id: string) => {
+    return widgetMapRef.current.has(id)
+  }, [])
+
+  // Reactive processing: Scan messages for tool outputs
+  // This maintains backward compatibility with server-side tools
+  useEffect(() => {
+    processMessagesForWidgets(messages, addWidget, updateWidget, hasWidget)
+  }, [messages, addWidget, updateWidget, hasWidget])
 
   return {
+    // State (read-only for consumers)
     widgets,
     activeTab,
-    setActiveTab,
+
+    // Imperative API
+    addWidget,
+    updateWidget,
+    removeWidget,
     clearWidgets,
+    hasWidget,
+
+    // UI controls
+    setActiveTab,
   }
 }

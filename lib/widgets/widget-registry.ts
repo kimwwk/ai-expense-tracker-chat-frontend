@@ -106,6 +106,21 @@ export const widgetRegistry: WidgetRegistry = {
     },
   },
 
+  /**
+   * Change set confirmation tool
+   * Displays pending changes for user review and approval
+   */
+  confirmChangeSet: {
+    widgetType: "changeset",
+    title: "Change Set Review",
+    metadata: {
+      description: "Review and approve pending changes",
+      category: "operations",
+      icon: "check-square",
+      autoFocus: true,
+    },
+  },
+
   // Note: The following tools do NOT have widget mappings (by design):
   // - addTransaction: Just adds a transaction, no visualization needed
   // - getTableNames: Schema inspection tool, no widget needed
