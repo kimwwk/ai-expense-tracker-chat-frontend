@@ -79,3 +79,36 @@ export async function getTransactions(filters?: TransactionFilters): Promise<Tra
 
   return apiClient<TransactionsResponse>(endpoint)
 }
+
+export interface TransactionUpdate {
+  account_id?: number
+  transaction_type?: "income" | "expense"
+  amount?: number
+  currency_code?: string
+  base_amount?: number
+  transaction_date?: string
+  status?: "pending" | "cleared" | "reconciled" | "void"
+  exchange_rate?: number
+  payee_id?: number | null
+  category_id?: number | null
+  description?: string | null
+  reference_number?: string | null
+  location?: string | null
+  notes?: string | null
+}
+
+export async function updateTransaction(
+  transactionId: number,
+  data: TransactionUpdate
+): Promise<Transaction> {
+  return apiClient<Transaction>(`/transactions/${transactionId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteTransaction(transactionId: number): Promise<void> {
+  await apiClient<void>(`/transactions/${transactionId}`, {
+    method: "DELETE",
+  })
+}

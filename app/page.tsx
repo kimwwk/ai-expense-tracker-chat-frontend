@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react"
 
 export default function Page() {
   // @ai-sdk/react v2 uses a different API - we manage input state locally
-  const { messages, sendMessage, setMessages, status } = useChat({
+  const { messages, sendMessage, setMessages, status, addToolOutput } = useChat({
     // Defaults to /api/chat endpoint
   })
 
@@ -70,6 +70,7 @@ export default function Page() {
         onSubmit={handleSubmit}
         onClearSession={handleClearSession}
         onSendMessage={sendMessage}
+        addToolOutput={addToolOutput}
       />
 
       {/* Right Panel: Dashboard Widgets */}

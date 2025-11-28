@@ -2,9 +2,11 @@
 
 import { useState } from "react"
 import { ChevronDown, ChevronRight, Loader2, CheckCircle, AlertCircle, Wrench, Brain } from "lucide-react"
+import { ToolApproval, APPROVAL_REQUIRED_TOOLS } from "./tool-approval"
 
 interface ChatMessageProps {
   message: any
+  addToolOutput?: any
 }
 
 interface ToolPartDisplayProps {
@@ -127,7 +129,7 @@ function ReasoningPartDisplay({ reasoningPart }: ReasoningPartDisplayProps) {
   )
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message, addToolOutput }: ChatMessageProps) {
   const isUser = message.role === "user"
 
   // Render parts sequentially in the order they appear to preserve streaming order
@@ -144,6 +146,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
     // Handle reasoning parts
     if (part.type?.startsWith("reasoning-")) {
       return <ReasoningPartDisplay key={idx} reasoningPart={part} />
+    }
+
+    // Handle client-side tools requiring approval
+    if (part.type?.startsWith("tool-") && APPROVAL_REQUIRED_TOOLS.includes(part.type)) {
+      return <ToolApproval key={part.toolCallId || idx} toolPart={part} addToolOutput={addToolOutput} />
     }
 
     // Handle tool parts (typed as "tool-getExpenses", "tool-analyzeSpending", etc.)

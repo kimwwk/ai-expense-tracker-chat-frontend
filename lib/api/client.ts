@@ -32,6 +32,11 @@ export async function apiClient<T>(endpoint: string, options?: RequestInit): Pro
       throw new ApiError(`API request failed: ${response.statusText}`, response.status, errorData)
     }
 
+    // Handle 204 No Content responses (e.g., DELETE requests)
+    if (response.status === 204) {
+      return undefined as T
+    }
+
     return await response.json()
   } catch (error) {
     if (error instanceof ApiError) {

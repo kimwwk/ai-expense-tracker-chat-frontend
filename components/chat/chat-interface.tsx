@@ -16,6 +16,7 @@ interface ChatInterfaceProps {
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
   onClearSession: () => void
   onSendMessage?: any
+  addToolOutput?: any
 }
 
 export function ChatInterface({
@@ -27,6 +28,7 @@ export function ChatInterface({
   onSubmit,
   onClearSession,
   onSendMessage,
+  addToolOutput,
 }: ChatInterfaceProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -119,7 +121,7 @@ export function ChatInterface({
           )}
 
           {messages.map((m: any) => (
-            <ChatMessage key={m.id} message={m} />
+            <ChatMessage key={m.id} message={m} addToolOutput={addToolOutput} />
           ))}
 
           {isLoading && messages[messages.length - 1]?.role === "user" && (

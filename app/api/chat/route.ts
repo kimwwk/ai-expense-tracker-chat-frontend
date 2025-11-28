@@ -41,9 +41,13 @@ You have access to tools organized into these categories:
 - **Reference Data**: Query database structure and metadata
 - **Analysis**: Generate spending summaries and insights
 
-The database is the source of truth. Use the appropriate tool to retrieve data. If data is not available, state this clearly.
-
 The frontend automatically renders rich Widgets from structured tool outputs. Clear and pinpoint summaries matter most.
+
+### Hybrid Balance Management System
+- **Stored Balance**: Each account has a balance column for performance
+- **PostgreSQL Triggers**: Automatically update balance for all transaction operations
+- **Opening Balance**: Separate tracking of initial account balance
+- **Reconciliation**: Use balance tools to validate and detect discrepancies
 
 ## Soft Guidance
 **Agent-Centric Design Philosophy**:
@@ -60,6 +64,7 @@ The frontend automatically renders rich Widgets from structured tool outputs. Cl
 - When uncertain about database schema or constraints, use reference tools to inspect the structure before making assumptions.
 - Compose multiple tool calls when needed to give complete answers. Choose focused, well-targeted tool calls over calling everything broadly.
 - If you make assumptions, state them explicitly. If information is missing or impossible to obtain, say so directly.
+- The database is the source of truth. Use the appropriate tool to retrieve data. If data is not available, state this clearly.
     `,
     messages: modelMessages,
     tools,

@@ -5,7 +5,7 @@
 import { tool } from "ai"
 import { z } from "zod"
 import { expenseDatabase, budgetData } from "@/lib/data"
-import { getTransactions, createTransaction } from "@/lib/api/transactions"
+import { getTransactions, createTransaction, updateTransaction, deleteTransaction } from "@/lib/api/transactions"
 
 export const addTransactionTool = tool({
   description: "Add a new transaction to the tracker. Creates an income or expense transaction with all required details.",
@@ -151,4 +151,42 @@ export const getSpendingSummaryTool = tool({
       dateRange: { startDate: startDate || "beginning", endDate: endDate || "now" },
     }
   },
+})
+
+export const updateTransactionTool = tool({
+  description: "Update transaction details such as amount, date, category, payee, or status. Only provided fields will be updated.",
+  inputSchema: z.object({
+    transaction_id: z.number().describe("ID of the transaction to update"),
+    account_id: z.number().optional().describe("Optional: New account ID"),
+    transaction_type: z.enum(["income", "expense"]).optional().describe("Optional: New transaction type"),
+    amount: z.number().optional().describe("Optional: New transaction amount (must be positive)"),
+    currency_code: z.string().optional().describe("Optional: New 3-letter ISO currency code"),
+    base_amount: z.number().optional().describe("Optional: New amount in base currency"),
+    transaction_date: z.string().optional().describe("Optional: New transaction date in YYYY-MM-DD format"),
+    status: z.enum(["pending", "cleared", "reconciled", "void"]).optional().describe("Optional: New transaction status"),
+    exchange_rate: z.number().optional().describe("Optional: New exchange rate"),
+    payee_id: z.number().optional().describe("Optional: New payee ID (use null to remove)"),
+    category_id: z.number().optional().describe("Optional: New category ID (use null to remove)"),
+    description: z.string().optional().describe("Optional: New description"),
+    reference_number: z.string().optional().describe("Optional: New reference or check number"),
+    location: z.string().optional().describe("Optional: New location"),
+    notes: z.string().optional().describe("Optional: New additional notes"),
+  }),
+  execute: async ({ transaction_id, ...updateData }) => {
+    try {
+      const transaction = await updateTransaction(transaction_id, updateData)
+      return transaction
+    } catch (error) {
+      console.error(`Error updating transaction ${transaction_id}:`, error)
+      throw new Error(`Failed to update transaction: ${error instanceof Error ? error.message : "Unknown error"}`)
+    }
+  },
+})
+
+export const deleteTransactionTool = tool({
+  description: "Delete a transaction by ID. This is a destructive action that requires user confirmation and cannot be undone.",
+  inputSchema: z.object({
+    transaction_id: z.number().describe("ID of the transaction to delete"),
+  }),
+  // NO execute function - this makes it a client-side tool requiring user approval
 })
