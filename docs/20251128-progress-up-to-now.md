@@ -17,12 +17,16 @@
 
 - lower priority: ui
 	- [x] prettier the approval
-	- [ ] if static live dashboard, we need to show the filter else user will be confused (sing)
+	- [x] if static live dashboard, we need to show the filter else user will be confused
 - lower priority
-	- agent should be aware of the dashboard as well
+	- [x] agent should be aware of the dashboard as well
 	- let user update it as well before appoval
 	- database migration: remove payee_id, add merchant sthing string
 	- widget state management including using ontoolcall callback or use message.parts to pull widgets
+
+
+## future directions
+
 - generic widget with generic data query (agent touch sql directly?)
 - port the langgraph agent if really needed - do we need hook to allow agent aware of the dashboard as well? or directly show the widgets linked with mcp tols? also check the agent repo to see anything need to take knowledge back to learn
 	- balance tools
