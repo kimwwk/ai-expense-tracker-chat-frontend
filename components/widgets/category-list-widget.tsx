@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
+import { Filter } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface Category {
@@ -16,10 +17,18 @@ interface Category {
 
 interface CategoryListWidgetProps {
   data: Category[] | { data: Category[]; pagination: { limit: number; offset: number; total: number } }
+  toolArgs?: {
+    category_type?: string
+    category_group?: string
+    is_active?: boolean
+    limit?: number
+    offset?: number
+  }
 }
 
-export function CategoryListWidget({ data }: CategoryListWidgetProps) {
+export function CategoryListWidget({ data, toolArgs }: CategoryListWidgetProps) {
   const categories = Array.isArray(data) ? data : data.data
+  const pagination = Array.isArray(data) ? null : data.pagination
 
   if (!categories || categories.length === 0) {
     return (
@@ -54,11 +63,20 @@ export function CategoryListWidget({ data }: CategoryListWidgetProps) {
     transfer: categories.filter((c) => c.category_type === "transfer"),
   }
 
+  // Check if filters are applied
+  const hasFilters = toolArgs && (
+    toolArgs.category_type !== undefined ||
+    toolArgs.category_group !== undefined ||
+    toolArgs.is_active !== undefined
+  )
+
   return (
     <Card className="h-full border-0 shadow-none">
-      <CardHeader>
+      <CardHeader className="space-y-3">
         <CardTitle>Categories ({categories.length})</CardTitle>
-        <div className="flex gap-2 mt-2 flex-wrap">
+
+        {/* Summary badges */}
+        <div className="flex gap-2 flex-wrap">
           {incomeCount > 0 && (
             <Badge variant="outline" className="bg-green-50 dark:bg-green-900/20">
               Income: {incomeCount}
@@ -80,7 +98,42 @@ export function CategoryListWidget({ data }: CategoryListWidgetProps) {
             </Badge>
           )}
         </div>
+
+        {/* Filter Summary */}
+        {hasFilters && (
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
+            <Filter className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="flex-1 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Applied Filters:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {toolArgs.category_type && (
+                  <Badge variant="secondary" className="text-xs capitalize">
+                    Type: {toolArgs.category_type}
+                  </Badge>
+                )}
+                {toolArgs.category_group && (
+                  <Badge variant="secondary" className="text-xs">
+                    Group: {toolArgs.category_group}
+                  </Badge>
+                )}
+                {toolArgs.is_active !== undefined && (
+                  <Badge variant="secondary" className="text-xs">
+                    Status: {toolArgs.is_active ? "Active" : "Inactive"}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Pagination Info */}
+        {pagination && pagination.total > categories.length && (
+          <div className="text-xs text-muted-foreground">
+            Showing {pagination.offset + 1}-{pagination.offset + categories.length} of {pagination.total} categories
+          </div>
+        )}
       </CardHeader>
+
       <CardContent className="p-0">
         <ScrollArea className="h-[500px]">
           <div className="p-4 space-y-6">

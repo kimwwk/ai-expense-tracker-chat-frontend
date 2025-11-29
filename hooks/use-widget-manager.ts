@@ -93,6 +93,7 @@ export function useWidgetManager(messages: UIMessage[]) {
         type: config.widgetType,
         title: config.title,
         data: input.data ?? null,
+        toolArgs: input.toolArgs, // Store tool arguments for filter display
         timestamp: Date.now(),
       }
 

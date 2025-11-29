@@ -13,6 +13,7 @@ export interface Widget {
   type: WidgetType
   title: string
   data: any
+  toolArgs?: any // Optional tool arguments used to create this widget (for filter display)
   timestamp: number
 }
 

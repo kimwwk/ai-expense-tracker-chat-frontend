@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { Landmark, PiggyBank, CreditCard, Wallet, TrendingUp, FileText } from "lucide-react"
+import { Landmark, PiggyBank, CreditCard, Wallet, TrendingUp, FileText, Filter } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
 interface Account {
@@ -23,16 +23,23 @@ interface Account {
 
 interface AccountListWidgetProps {
   data: Account[] | { data: Account[]; pagination: { limit: number; offset: number; total: number } }
+  toolArgs?: {
+    account_type_id?: number
+    currency_code?: string
+    is_closed?: boolean
+    limit?: number
+    offset?: number
+  }
 }
 
-// Map account type IDs to icons
-const accountTypeIcons: Record<number, LucideIcon> = {
-  1: Landmark, // checking
-  2: PiggyBank, // savings
-  3: CreditCard, // credit_card
-  4: Wallet, // cash
-  5: TrendingUp, // investment
-  6: FileText, // loan
+// Map account type IDs to icons and names
+const accountTypeInfo: Record<number, { icon: LucideIcon; name: string }> = {
+  1: { icon: Landmark, name: "Checking" },
+  2: { icon: PiggyBank, name: "Savings" },
+  3: { icon: CreditCard, name: "Credit Card" },
+  4: { icon: Wallet, name: "Cash" },
+  5: { icon: TrendingUp, name: "Investment" },
+  6: { icon: FileText, name: "Loan" },
 }
 
 // Currency symbols mapping
@@ -45,8 +52,9 @@ const currencySymbols: Record<string, string> = {
   AUD: "A$",
 }
 
-export function AccountListWidget({ data }: AccountListWidgetProps) {
+export function AccountListWidget({ data, toolArgs }: AccountListWidgetProps) {
   const accounts = Array.isArray(data) ? data : data.data
+  const pagination = Array.isArray(data) ? null : data.pagination
 
   if (!accounts || accounts.length === 0) {
     return (
@@ -62,17 +70,60 @@ export function AccountListWidget({ data }: AccountListWidgetProps) {
   const primaryCurrency = activeAccounts[0]?.currency_code || "USD"
   const totalSymbol = currencySymbols[primaryCurrency] || primaryCurrency
 
+  // Check if filters are applied
+  const hasFilters = toolArgs && (
+    toolArgs.account_type_id !== undefined ||
+    toolArgs.currency_code !== undefined ||
+    toolArgs.is_closed !== undefined
+  )
+
   return (
     <Card className="h-full border-0 shadow-none">
-      <CardHeader>
+      <CardHeader className="space-y-3">
         <CardTitle>Accounts ({accounts.length})</CardTitle>
+
+        {/* Filter Summary */}
+        {hasFilters && (
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
+            <Filter className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="flex-1 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Applied Filters:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {toolArgs.account_type_id !== undefined && (
+                  <Badge variant="secondary" className="text-xs">
+                    Type: {accountTypeInfo[toolArgs.account_type_id]?.name || `ID ${toolArgs.account_type_id}`}
+                  </Badge>
+                )}
+                {toolArgs.currency_code && (
+                  <Badge variant="secondary" className="text-xs">
+                    Currency: {toolArgs.currency_code}
+                  </Badge>
+                )}
+                {toolArgs.is_closed !== undefined && (
+                  <Badge variant="secondary" className="text-xs">
+                    Status: {toolArgs.is_closed ? "Closed" : "Active"}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Pagination Info */}
+        {pagination && pagination.total > accounts.length && (
+          <div className="text-xs text-muted-foreground">
+            Showing {pagination.offset + 1}-{pagination.offset + accounts.length} of {pagination.total} accounts
+          </div>
+        )}
       </CardHeader>
+
       <CardContent>
         <ScrollArea className="h-[500px]">
           <div className="space-y-3">
             {accounts.map((account) => {
               const balance = parseFloat(account.current_balance)
-              const Icon = accountTypeIcons[account.account_type_id] || Wallet
+              const typeInfo = accountTypeInfo[account.account_type_id]
+              const Icon = typeInfo?.icon || Wallet
               const symbol = currencySymbols[account.currency_code] || account.currency_code
               const displayName = account.institution_name
                 ? `${account.account_name} (${account.institution_name})`

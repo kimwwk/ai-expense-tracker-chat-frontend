@@ -32,7 +32,7 @@ const widgetTypeMap: Record<WidgetType, { label: string; icon: LucideIcon }> = {
 function renderWidget(widget: Widget) {
   switch (widget.type) {
     case "transaction-list":
-      return <TransactionListWidget data={widget.data} />
+      return <TransactionListWidget data={widget.data} toolArgs={widget.toolArgs} />
     case "spending-analysis":
       return (
         <div className="p-6">
@@ -42,9 +42,9 @@ function renderWidget(widget: Widget) {
     case "summary-chart":
       return <SummaryChartWidget data={widget.data} />
     case "account-list":
-      return <AccountListWidget data={widget.data} />
+      return <AccountListWidget data={widget.data} toolArgs={widget.toolArgs} />
     case "category-list":
-      return <CategoryListWidget data={widget.data} />
+      return <CategoryListWidget data={widget.data} toolArgs={widget.toolArgs} />
     case "changeset":
       return (
         <div className="p-6">
