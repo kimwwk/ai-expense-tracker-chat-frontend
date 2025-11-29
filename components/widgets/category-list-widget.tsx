@@ -63,12 +63,8 @@ export function CategoryListWidget({ data, toolArgs }: CategoryListWidgetProps) 
     transfer: categories.filter((c) => c.category_type === "transfer"),
   }
 
-  // Check if filters are applied
-  const hasFilters = toolArgs && (
-    toolArgs.category_type !== undefined ||
-    toolArgs.category_group !== undefined ||
-    toolArgs.is_active !== undefined
-  )
+  // Check if any parameters were used
+  const hasParameters = !!toolArgs
 
   return (
     <Card className="h-full border-0 shadow-none">
@@ -99,13 +95,14 @@ export function CategoryListWidget({ data, toolArgs }: CategoryListWidgetProps) 
           )}
         </div>
 
-        {/* Filter Summary */}
-        {hasFilters && (
+        {/* Query Parameters */}
+        {hasParameters && (
           <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
             <Filter className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div className="flex-1 space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">Applied Filters:</p>
+              <p className="text-xs font-medium text-muted-foreground">Query Parameters:</p>
               <div className="flex flex-wrap gap-1.5">
+                {/* Filters */}
                 {toolArgs.category_type && (
                   <Badge variant="secondary" className="text-xs capitalize">
                     Type: {toolArgs.category_type}
@@ -121,15 +118,27 @@ export function CategoryListWidget({ data, toolArgs }: CategoryListWidgetProps) 
                     Status: {toolArgs.is_active ? "Active" : "Inactive"}
                   </Badge>
                 )}
+
+                {/* Pagination */}
+                {toolArgs.limit !== undefined && (
+                  <Badge variant="outline" className="text-xs">
+                    Limit: {toolArgs.limit}
+                  </Badge>
+                )}
+                {toolArgs.offset !== undefined && toolArgs.offset > 0 && (
+                  <Badge variant="outline" className="text-xs">
+                    Offset: {toolArgs.offset}
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
         )}
 
-        {/* Pagination Info */}
+        {/* Result Summary */}
         {pagination && pagination.total > categories.length && (
           <div className="text-xs text-muted-foreground">
-            Showing {pagination.offset + 1}-{pagination.offset + categories.length} of {pagination.total} categories
+            Showing {pagination.offset + 1}-{pagination.offset + categories.length} of {pagination.total} total
           </div>
         )}
       </CardHeader>

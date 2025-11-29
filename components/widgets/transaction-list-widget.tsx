@@ -54,19 +54,8 @@ export function TransactionListWidget({ data, toolArgs }: TransactionListWidgetP
     .reduce((sum, t) => sum + Math.abs(t.amount), 0)
   const netTotal = incomeTotal - expenseTotal
 
-  // Check if filters are applied
-  const hasFilters = toolArgs && (
-    toolArgs.account_id !== undefined ||
-    toolArgs.category_id !== undefined ||
-    toolArgs.payee_id !== undefined ||
-    toolArgs.transaction_type !== undefined ||
-    toolArgs.status !== undefined ||
-    toolArgs.start_date !== undefined ||
-    toolArgs.end_date !== undefined
-  )
-
-  // Check if sorting is applied
-  const hasSorting = toolArgs && (toolArgs.sort !== undefined || toolArgs.order !== undefined)
+  // Check if any parameters were used
+  const hasParameters = !!toolArgs
 
   return (
     <Card className="h-full border-0 shadow-none">
@@ -91,13 +80,14 @@ export function TransactionListWidget({ data, toolArgs }: TransactionListWidgetP
           </Badge>
         </div>
 
-        {/* Filter Summary */}
-        {hasFilters && (
+        {/* Query Parameters */}
+        {hasParameters && (
           <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
             <Filter className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div className="flex-1 space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">Applied Filters:</p>
+              <p className="text-xs font-medium text-muted-foreground">Query Parameters:</p>
               <div className="flex flex-wrap gap-1.5">
+                {/* Filters */}
                 {toolArgs.account_id !== undefined && (
                   <Badge variant="secondary" className="text-xs">
                     Account ID: {toolArgs.account_id}
@@ -133,25 +123,40 @@ export function TransactionListWidget({ data, toolArgs }: TransactionListWidgetP
                     To: {toolArgs.end_date}
                   </Badge>
                 )}
+
+                {/* Sort */}
+                {toolArgs.sort && (
+                  <Badge variant="outline" className="text-xs">
+                    <ArrowUpDown className="w-3 h-3 mr-1" />
+                    Sort: {toolArgs.sort}
+                  </Badge>
+                )}
+                {toolArgs.order && (
+                  <Badge variant="outline" className="text-xs">
+                    Order: {toolArgs.order === "asc" ? "Ascending" : "Descending"}
+                  </Badge>
+                )}
+
+                {/* Pagination */}
+                {toolArgs.limit !== undefined && (
+                  <Badge variant="outline" className="text-xs">
+                    Limit: {toolArgs.limit}
+                  </Badge>
+                )}
+                {toolArgs.offset !== undefined && toolArgs.offset > 0 && (
+                  <Badge variant="outline" className="text-xs">
+                    Offset: {toolArgs.offset}
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
         )}
 
-        {/* Sort Info */}
-        {hasSorting && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <ArrowUpDown className="w-3 h-3" />
-            <span>
-              Sorted by {toolArgs.sort || "transaction_date"} ({toolArgs.order === "asc" ? "oldest first" : "newest first"})
-            </span>
-          </div>
-        )}
-
-        {/* Pagination Info */}
+        {/* Result Summary */}
         {pagination && pagination.total > transactions.length && (
           <div className="text-xs text-muted-foreground">
-            Showing {pagination.offset + 1}-{pagination.offset + transactions.length} of {pagination.total} transactions
+            Showing {pagination.offset + 1}-{pagination.offset + transactions.length} of {pagination.total} total
           </div>
         )}
       </CardHeader>

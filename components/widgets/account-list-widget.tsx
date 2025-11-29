@@ -70,25 +70,22 @@ export function AccountListWidget({ data, toolArgs }: AccountListWidgetProps) {
   const primaryCurrency = activeAccounts[0]?.currency_code || "USD"
   const totalSymbol = currencySymbols[primaryCurrency] || primaryCurrency
 
-  // Check if filters are applied
-  const hasFilters = toolArgs && (
-    toolArgs.account_type_id !== undefined ||
-    toolArgs.currency_code !== undefined ||
-    toolArgs.is_closed !== undefined
-  )
+  // Check if any parameters were used
+  const hasParameters = !!toolArgs
 
   return (
     <Card className="h-full border-0 shadow-none">
       <CardHeader className="space-y-3">
         <CardTitle>Accounts ({accounts.length})</CardTitle>
 
-        {/* Filter Summary */}
-        {hasFilters && (
+        {/* Query Parameters */}
+        {hasParameters && (
           <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
             <Filter className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div className="flex-1 space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">Applied Filters:</p>
+              <p className="text-xs font-medium text-muted-foreground">Query Parameters:</p>
               <div className="flex flex-wrap gap-1.5">
+                {/* Filters */}
                 {toolArgs.account_type_id !== undefined && (
                   <Badge variant="secondary" className="text-xs">
                     Type: {accountTypeInfo[toolArgs.account_type_id]?.name || `ID ${toolArgs.account_type_id}`}
@@ -104,15 +101,27 @@ export function AccountListWidget({ data, toolArgs }: AccountListWidgetProps) {
                     Status: {toolArgs.is_closed ? "Closed" : "Active"}
                   </Badge>
                 )}
+
+                {/* Pagination */}
+                {toolArgs.limit !== undefined && (
+                  <Badge variant="outline" className="text-xs">
+                    Limit: {toolArgs.limit}
+                  </Badge>
+                )}
+                {toolArgs.offset !== undefined && toolArgs.offset > 0 && (
+                  <Badge variant="outline" className="text-xs">
+                    Offset: {toolArgs.offset}
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
         )}
 
-        {/* Pagination Info */}
+        {/* Result Summary */}
         {pagination && pagination.total > accounts.length && (
           <div className="text-xs text-muted-foreground">
-            Showing {pagination.offset + 1}-{pagination.offset + accounts.length} of {pagination.total} accounts
+            Showing {pagination.offset + 1}-{pagination.offset + accounts.length} of {pagination.total} total
           </div>
         )}
       </CardHeader>
