@@ -217,7 +217,6 @@ function PageContent() {
   const handleClearSession = () => {
     setMessages([])
     clearWidgets()
-    prevWidgetCountRef.current = 0
     setInput("")
   }
 
