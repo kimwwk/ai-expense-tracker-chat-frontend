@@ -28,26 +28,26 @@ import {
 
 export const tools = {
   // Transaction CRUD
-  // addTransaction: addTransactionTool,  // Commented out - use direct tool or changeset
+  // addTransaction: addTransactionTool,
   getTransactions: getTransactionsTool,
-  updateTransaction: updateTransactionTool,
-  deleteTransaction: deleteTransactionTool,
+  // updateTransaction: updateTransactionTool,
+  // deleteTransaction: deleteTransactionTool,
   analyzeSpending: analyzeSpendingTool,
   getSpendingSummary: getSpendingSummaryTool,
 
   // Account CRUD
-  createAccount: createAccountTool,
+  // createAccount: createAccountTool,
   getAccounts: getAccountsTool,
   getAccount: getAccountTool,
-  updateAccount: updateAccountTool,
-  deleteAccount: deleteAccountTool,
+  // updateAccount: updateAccountTool,
+  // deleteAccount: deleteAccountTool,
 
   // Category CRUD
-  createCategory: createCategoryTool,
+  // createCategory: createCategoryTool,
   getCategories: getCategoriesTool,
   getCategory: getCategoryTool,
-  updateCategory: updateCategoryTool,
-  deleteCategory: deleteCategoryTool,
+  // updateCategory: updateCategoryTool,
+  // deleteCategory: deleteCategoryTool,
 
   // Reference data
   getAccountTypes: getAccountTypesTool,
