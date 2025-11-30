@@ -1,5 +1,15 @@
 import { NextResponse } from "next/server"
-import { createTransaction } from "@/lib/api/transactions"
+import {
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+} from "@/lib/api/transactions"
+import { createAccount, updateAccount, deleteAccount } from "@/lib/api/accounts"
+import {
+  createCategory,
+  updateCategory,
+  deleteCategory,
+} from "@/lib/api/categories"
 
 export async function POST(req: Request) {
   try {
@@ -18,16 +28,50 @@ export async function POST(req: Request) {
       console.log(`  Proposed Data:`, request.proposedData)
 
       try {
-        // Only actually execute createTransaction
-        if (request.operation === "create" && request.entity === "transaction") {
-          const result = await createTransaction(request.proposedData)
-          console.log(`  ✓ Created transaction:`, result)
-          results.push({ request: request.id, success: true, result })
+        let result
+
+        // Route to appropriate API based on entity and operation
+        if (request.entity === "transaction") {
+          if (request.operation === "create") {
+            result = await createTransaction(request.proposedData)
+            console.log(`  ✓ Created transaction:`, result)
+          } else if (request.operation === "update") {
+            result = await updateTransaction(request.recordId, request.proposedData)
+            console.log(`  ✓ Updated transaction:`, result)
+          } else if (request.operation === "delete") {
+            await deleteTransaction(request.recordId)
+            console.log(`  ✓ Deleted transaction`)
+            result = { deleted: true }
+          }
+        } else if (request.entity === "account") {
+          if (request.operation === "create") {
+            result = await createAccount(request.proposedData)
+            console.log(`  ✓ Created account:`, result)
+          } else if (request.operation === "update") {
+            result = await updateAccount(request.recordId, request.proposedData)
+            console.log(`  ✓ Updated account:`, result)
+          } else if (request.operation === "delete") {
+            await deleteAccount(request.recordId)
+            console.log(`  ✓ Deleted account`)
+            result = { deleted: true }
+          }
+        } else if (request.entity === "category") {
+          if (request.operation === "create") {
+            result = await createCategory(request.proposedData)
+            console.log(`  ✓ Created category:`, result)
+          } else if (request.operation === "update") {
+            result = await updateCategory(request.recordId, request.proposedData)
+            console.log(`  ✓ Updated category:`, result)
+          } else if (request.operation === "delete") {
+            await deleteCategory(request.recordId)
+            console.log(`  ✓ Deleted category`)
+            result = { deleted: true }
+          }
         } else {
-          // Simulate success for other operations
-          console.log(`  ✓ Simulated (not implemented)`)
-          results.push({ request: request.id, success: true, simulated: true })
+          throw new Error(`Unsupported entity: ${request.entity}`)
         }
+
+        results.push({ request: request.id, success: true, result })
       } catch (error) {
         console.error(`  ✗ Failed:`, error)
         results.push({

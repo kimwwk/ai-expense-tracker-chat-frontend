@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { Landmark, PiggyBank, CreditCard, Wallet, TrendingUp, FileText, Filter } from "lucide-react"
+import { CreditCard, Wallet, Building2, PiggyBank, Landmark, FileText, Filter } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
 interface Account {
@@ -21,6 +20,47 @@ interface Account {
   updated_at: string
 }
 
+// Map account type IDs to icons and names
+const accountTypeInfo: Record<number, { icon: LucideIcon; name: string }> = {
+  1: { icon: Landmark, name: "Checking" },
+  2: { icon: PiggyBank, name: "Savings" },
+  3: { icon: CreditCard, name: "Credit Card" },
+  4: { icon: Wallet, name: "Cash" },
+  5: { icon: Building2, name: "Investment" },
+  6: { icon: FileText, name: "Loan" },
+}
+
+function formatCurrency(amount: number, currency: string) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+  }).format(Math.abs(amount))
+}
+
+function CreditUtilization({ balance, limit }: { balance: number; limit: number }) {
+  const used = Math.abs(balance)
+  const percentage = Math.min((used / limit) * 100, 100)
+
+  let color = "bg-success"
+  if (percentage > 30) color = "bg-amber-400"
+  if (percentage > 70) color = "bg-destructive"
+
+  return (
+    <div className="mt-1.5">
+      <div className="mb-1 flex justify-between text-xs text-muted-foreground">
+        <span>Credit used</span>
+        <span>{percentage.toFixed(1)}%</span>
+      </div>
+      <div className="h-1.5 w-full rounded-full bg-muted">
+        <div
+          className={`h-full rounded-full ${color} transition-all`}
+          style={{ width: `${Math.max(percentage, 1)}%` }}
+        />
+      </div>
+    </div>
+  )
+}
+
 interface AccountListWidgetProps {
   data: Account[] | { data: Account[]; pagination: { limit: number; offset: number; total: number } }
   toolArgs?: {
@@ -32,25 +72,6 @@ interface AccountListWidgetProps {
   }
 }
 
-// Map account type IDs to icons and names
-const accountTypeInfo: Record<number, { icon: LucideIcon; name: string }> = {
-  1: { icon: Landmark, name: "Checking" },
-  2: { icon: PiggyBank, name: "Savings" },
-  3: { icon: CreditCard, name: "Credit Card" },
-  4: { icon: Wallet, name: "Cash" },
-  5: { icon: TrendingUp, name: "Investment" },
-  6: { icon: FileText, name: "Loan" },
-}
-
-// Currency symbols mapping
-const currencySymbols: Record<string, string> = {
-  USD: "$",
-  EUR: "€",
-  GBP: "£",
-  JPY: "¥",
-  CAD: "C$",
-  AUD: "A$",
-}
 
 export function AccountListWidget({ data, toolArgs }: AccountListWidgetProps) {
   const accounts = Array.isArray(data) ? data : data.data
@@ -64,19 +85,15 @@ export function AccountListWidget({ data, toolArgs }: AccountListWidgetProps) {
     )
   }
 
-  // Calculate total balance for active accounts
-  const activeAccounts = accounts.filter((acc) => !acc.is_closed)
-  const total = activeAccounts.reduce((sum, acc) => sum + parseFloat(acc.current_balance), 0)
-  const primaryCurrency = activeAccounts[0]?.currency_code || "USD"
-  const totalSymbol = currencySymbols[primaryCurrency] || primaryCurrency
-
   // Check if any parameters were used
   const hasParameters = !!toolArgs
 
   return (
     <Card className="h-full border-0 shadow-none">
-      <CardHeader className="space-y-3">
-        <CardTitle>Accounts ({accounts.length})</CardTitle>
+      <CardHeader className="pb-2 space-y-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold">Accounts ({accounts.length})</CardTitle>
+        </div>
 
         {/* Query Parameters */}
         {hasParameters && (
@@ -85,10 +102,9 @@ export function AccountListWidget({ data, toolArgs }: AccountListWidgetProps) {
             <div className="flex-1 space-y-2">
               <p className="text-xs font-medium text-muted-foreground">Query Parameters:</p>
               <div className="flex flex-wrap gap-1.5">
-                {/* Filters */}
                 {toolArgs.account_type_id !== undefined && (
                   <Badge variant="secondary" className="text-xs">
-                    Type: {accountTypeInfo[toolArgs.account_type_id]?.name || `ID ${toolArgs.account_type_id}`}
+                    Type ID: {toolArgs.account_type_id}
                   </Badge>
                 )}
                 {toolArgs.currency_code && (
@@ -101,8 +117,6 @@ export function AccountListWidget({ data, toolArgs }: AccountListWidgetProps) {
                     Status: {toolArgs.is_closed ? "Closed" : "Active"}
                   </Badge>
                 )}
-
-                {/* Pagination */}
                 {toolArgs.limit !== undefined && (
                   <Badge variant="outline" className="text-xs">
                     Limit: {toolArgs.limit}
@@ -126,70 +140,60 @@ export function AccountListWidget({ data, toolArgs }: AccountListWidgetProps) {
         )}
       </CardHeader>
 
-      <CardContent>
-        <ScrollArea className="h-[500px]">
-          <div className="space-y-3">
-            {accounts.map((account) => {
-              const balance = parseFloat(account.current_balance)
-              const typeInfo = accountTypeInfo[account.account_type_id]
-              const Icon = typeInfo?.icon || Wallet
-              const symbol = currencySymbols[account.currency_code] || account.currency_code
-              const displayName = account.institution_name
-                ? `${account.account_name} (${account.institution_name})`
-                : account.account_name
-              const creditLimit = account.credit_limit ? parseFloat(account.credit_limit) : null
-              const creditUsagePercent = creditLimit && creditLimit > 0 ? Math.abs((balance / creditLimit) * 100) : null
+      <CardContent className="space-y-1 px-3">
+        {accounts.map((account) => {
+          const balance = parseFloat(account.current_balance)
+          const creditLimit = account.credit_limit ? parseFloat(account.credit_limit) : null
+          const typeInfo = accountTypeInfo[account.account_type_id]
+          const Icon = typeInfo?.icon || Wallet
 
-              return (
-                <div key={account.account_id} className="flex items-center justify-between py-2 border-b last:border-0">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <Icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium truncate">{displayName}</span>
-                        {account.is_closed && (
-                          <Badge variant="secondary" className="text-xs">
-                            Closed
-                          </Badge>
-                        )}
-                      </div>
-                      {creditLimit && (
-                        <div className="text-xs text-muted-foreground">
-                          Limit: {symbol}
-                          {creditLimit.toLocaleString("en-US", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                          {creditUsagePercent !== null && ` (${creditUsagePercent.toFixed(0)}% used)`}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <span className="text-sm font-semibold flex-shrink-0 ml-2">
-                    {symbol}
-                    {Math.abs(balance).toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </span>
+          return (
+            <div
+              key={account.account_id}
+              className="group rounded-lg px-3 py-2.5 transition-colors hover:bg-muted/50"
+            >
+              <div className="flex items-start gap-3">
+                {/* Icon */}
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
+                  <Icon className="size-4" />
                 </div>
-              )
-            })}
 
-            {activeAccounts.length > 0 && (
-              <div className="flex items-center justify-between py-2 border-t border-border mt-2 pt-4">
-                <span className="text-sm font-bold">Total:</span>
-                <span className="text-sm font-bold">
-                  {totalSymbol}
-                  {total.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </span>
+                {/* Content */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate font-medium text-sm">{account.account_name}</span>
+                    {account.is_closed && (
+                      <Badge variant="secondary" className="h-4 shrink-0 px-1.5 text-[10px] font-normal">
+                        Closed
+                      </Badge>
+                    )}
+                  </div>
+                  {account.institution_name && (
+                    <p className="text-xs text-muted-foreground">{account.institution_name}</p>
+                  )}
+
+                  {/* Credit utilization for credit accounts */}
+                  {creditLimit && creditLimit > 0 && (
+                    <CreditUtilization balance={balance} limit={creditLimit} />
+                  )}
+                </div>
+
+                {/* Balance */}
+                <div className="shrink-0 text-right">
+                  <p className={`font-semibold text-sm ${balance < 0 ? "text-destructive" : "text-foreground"}`}>
+                    {balance < 0 ? "-" : ""}
+                    {formatCurrency(balance, account.currency_code)}
+                  </p>
+                  {creditLimit && (
+                    <p className="text-xs text-muted-foreground">
+                      of {formatCurrency(creditLimit, account.currency_code)}
+                    </p>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-        </ScrollArea>
+            </div>
+          )
+        })}
       </CardContent>
     </Card>
   )
