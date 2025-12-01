@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { CreditCard, Wallet, Building2, PiggyBank, Landmark, FileText, Filter } from "lucide-react"
+import { CreditCard, Wallet, Building2, PiggyBank, Landmark, FileText, Filter, TrendingUp, TrendingDown } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
 interface Account {
@@ -41,9 +41,9 @@ function CreditUtilization({ balance, limit }: { balance: number; limit: number 
   const used = Math.abs(balance)
   const percentage = Math.min((used / limit) * 100, 100)
 
-  let color = "bg-success"
-  if (percentage > 30) color = "bg-amber-400"
-  if (percentage > 70) color = "bg-destructive"
+  let colorClass = "bg-green-500"
+  if (percentage > 30) colorClass = "bg-amber-500"
+  if (percentage > 70) colorClass = "bg-red-500"
 
   return (
     <div className="mt-1.5">
@@ -51,10 +51,10 @@ function CreditUtilization({ balance, limit }: { balance: number; limit: number 
         <span>Credit used</span>
         <span>{percentage.toFixed(1)}%</span>
       </div>
-      <div className="h-1.5 w-full rounded-full bg-muted">
+      <div className="relative h-2 w-full rounded-full bg-muted">
         <div
-          className={`h-full rounded-full ${color} transition-all`}
-          style={{ width: `${Math.max(percentage, 1)}%` }}
+          className={`absolute inset-y-0 left-0 rounded-full transition-all ${colorClass}`}
+          style={{ width: `${percentage}%`, minWidth: '4px' }}
         />
       </div>
     </div>
@@ -84,6 +84,11 @@ export function AccountListWidget({ data, toolArgs }: AccountListWidgetProps) {
       </div>
     )
   }
+
+  // Calculate net total
+  const activeAccounts = accounts.filter((acc) => !acc.is_closed)
+  const netTotal = activeAccounts.reduce((sum, acc) => sum + parseFloat(acc.current_balance), 0)
+  const primaryCurrency = accounts[0]?.currency_code || "USD"
 
   // Check if any parameters were used
   const hasParameters = !!toolArgs
@@ -194,6 +199,18 @@ export function AccountListWidget({ data, toolArgs }: AccountListWidgetProps) {
             </div>
           )
         })}
+
+        {/* Net Total */}
+        {activeAccounts.length > 0 && (
+          <div className="group rounded-lg px-3 py-2.5 border-t border-border mt-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold">Net Total:</span>
+              <span className="text-sm font-bold">
+                {formatCurrency(netTotal, primaryCurrency)}
+              </span>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

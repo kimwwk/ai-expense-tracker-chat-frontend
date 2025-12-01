@@ -11,7 +11,7 @@ export interface Transaction {
   payee_id?: number | null
   transaction_date: string
   amount: number
-  transaction_type: "expense" | "income"
+  transaction_type: "expense" | "income" | "transfer"
   description?: string | null
   status?: string
   created_at?: string
@@ -22,7 +22,7 @@ export interface TransactionFilters {
   account_id?: number
   category_id?: number
   payee_id?: number
-  transaction_type?: "expense" | "income"
+  transaction_type?: "expense" | "income" | "transfer"
   status?: "pending" | "cleared" | "reconciled" | "void"
   start_date?: string
   end_date?: string
@@ -34,7 +34,7 @@ export interface TransactionFilters {
 
 export interface TransactionCreate {
   account_id: number
-  transaction_type: "income" | "expense"
+  transaction_type: "income" | "expense" | "transfer"
   amount: number
   currency_code: string
   base_amount: number
@@ -82,7 +82,7 @@ export async function getTransactions(filters?: TransactionFilters): Promise<Tra
 
 export interface TransactionUpdate {
   account_id?: number
-  transaction_type?: "income" | "expense"
+  transaction_type?: "income" | "expense" | "transfer"
   amount?: number
   currency_code?: string
   base_amount?: number

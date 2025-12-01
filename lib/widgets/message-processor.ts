@@ -7,6 +7,7 @@
  */
 
 import { getWidgetConfig } from "./widget-registry"
+import { getCategories } from "@/lib/api/categories"
 
 /**
  * Extracted widget data from a message part.
@@ -96,6 +97,53 @@ export function extractWidgetsFromMessages(
 }
 
 /**
+ * Enrich transaction data with category information.
+ *
+ * @param data - Widget data (can be single transaction list or paginated response)
+ * @returns Enriched data with category_name and category_color added to transactions
+ */
+async function enrichTransactionData(data: any): Promise<any> {
+  if (!data) return data
+
+  // Extract transactions array (handle both formats)
+  let transactions = Array.isArray(data) ? data : data.data
+  if (!transactions || !Array.isArray(transactions)) return data
+
+  // Get all categories
+  try {
+    const categoriesResponse = await getCategories({ limit: 200 })
+    const categories = categoriesResponse.data
+
+    // Create a lookup map
+    const categoryMap = new Map(
+      categories.map((cat) => [
+        cat.category_id,
+        { name: cat.category_name, color: cat.color_code },
+      ])
+    )
+
+    // Enrich transactions
+    const enriched = transactions.map((tx) => {
+      if (tx.category_id && categoryMap.has(tx.category_id)) {
+        const catInfo = categoryMap.get(tx.category_id)!
+        return {
+          ...tx,
+          category_name: catInfo.name,
+          category_color: catInfo.color,
+        }
+      }
+      return tx
+    })
+
+    // Return in same format as input
+    return Array.isArray(data) ? enriched : { ...data, data: enriched }
+  } catch (error) {
+    console.error("Failed to enrich transaction data:", error)
+    return data
+  }
+}
+
+/**
  * Process messages and create/update widgets using the imperative API.
  *
  * This function bridges the reactive (messages) and imperative (addWidget)
@@ -122,7 +170,7 @@ export function processMessagesForWidgets(
 ): void {
   const extracted = extractWidgetsFromMessages(messages)
 
-  extracted.forEach((widgetData) => {
+  extracted.forEach(async (widgetData) => {
     // Check if widget already exists
     const exists = hasWidget(widgetData.toolCallId)
 
@@ -133,18 +181,24 @@ export function processMessagesForWidgets(
       return
     }
 
+    // Enrich transaction data with category names if this is a transaction widget
+    let enrichedData = widgetData.data
+    if (widgetData.toolName === "getTransactions" && widgetData.data) {
+      enrichedData = await enrichTransactionData(widgetData.data)
+    }
+
     if (exists) {
       // Widget exists - update it with new data if it has data
       // This handles the case where widget was created imperatively with null data
       // and now the message output has arrived
-      updateWidget(widgetData.toolCallId, { data: widgetData.data })
+      updateWidget(widgetData.toolCallId, { data: enrichedData })
     } else {
       // Widget doesn't exist - create it
       addWidget({
         id: widgetData.toolCallId,
         toolName: widgetData.toolName,
         toolArgs: widgetData.toolArgs,
-        data: widgetData.data,
+        data: enrichedData,
         // Use registry default for autoFocus
       })
     }

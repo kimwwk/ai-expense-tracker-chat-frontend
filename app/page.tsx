@@ -10,6 +10,7 @@ import { fetchCurrentData } from "@/lib/changeset/helpers"
 import { transformToolInput } from "@/lib/changeset/transformations"
 import { EntityType, OperationType } from "@/lib/changeset/types"
 import { useEffect, useRef, useState } from "react"
+import { Sparkles, User } from "lucide-react"
 
 /**
  * Parse tool name to extract entity and operation
@@ -221,23 +222,48 @@ function PageContent() {
   }
 
   return (
-    <div className="h-screen w-full bg-background flex overflow-hidden">
-      {/* Left Panel: Chat Interface */}
-      <ChatInterface
-        messages={messages}
-        input={input}
-        isLoading={isLoading}
-        status={status}
-        onInputChange={handleInputChange}
-        onSubmit={handleSubmit}
-        onClearSession={handleClearSession}
-        onSendMessage={sendMessage}
-        addToolOutput={addToolOutput}
-      />
+    <div className="h-screen w-full bg-background flex flex-col overflow-hidden">
+      {/* TopBar - Header */}
+      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border">
+        <div className="max-w-full px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent animate-pulse" />
+              <Sparkles className="w-4 h-4 text-primary relative z-10" />
+            </div>
+            <div>
+              <h1 className="text-sm font-semibold text-foreground">AI Expense Tracker</h1>
+              <p className="text-xs text-muted-foreground">Your intelligent finance assistant</p>
+            </div>
+          </div>
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/50 to-primary/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity blur" />
+            <button className="relative w-8 h-8 rounded-full bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center ring-2 ring-border/50 transition-all hover:ring-primary/50">
+              <User className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
+        </div>
+      </header>
 
-      {/* Right Panel: Dashboard Widgets */}
-      <div className="flex-1 bg-muted/20">
-        <Dashboard widgets={widgets} activeTab={activeTab} onTabChange={setActiveTab} />
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Panel: Chat Interface */}
+        <ChatInterface
+          messages={messages}
+          input={input}
+          isLoading={isLoading}
+          status={status}
+          onInputChange={handleInputChange}
+          onSubmit={handleSubmit}
+          onClearSession={handleClearSession}
+          onSendMessage={sendMessage}
+          addToolOutput={addToolOutput}
+        />
+
+        {/* Right Panel: Dashboard Widgets */}
+        <div className="flex-1 bg-muted/20">
+          <Dashboard widgets={widgets} activeTab={activeTab} onTabChange={setActiveTab} />
+        </div>
       </div>
     </div>
   )

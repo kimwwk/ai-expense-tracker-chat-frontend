@@ -98,11 +98,11 @@ export function ChatInterface({
                   onClick={() => {
                     onSendMessage({
                       role: "user",
-                      parts: [{ type: "text", text: "Show me food budget analysis" }],
+                      parts: [{ type: "text", text: "Show me all my transactions" }],
                     })
                   }}
                 >
-                  "Show me food budget analysis"
+                  "Today I had lunch $23 on my mastercard"
                 </Button>
                 <Button
                   variant="outline"
@@ -114,7 +114,19 @@ export function ChatInterface({
                     })
                   }}
                 >
-                  "Show Spending by Category"
+                  "Show Spending by Category (dummy now)"
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    onSendMessage({
+                      role: "user",
+                      parts: [{ type: "text", text: "Show me food budget analysis" }],
+                    })
+                  }}
+                >
+                  "Show me food budget analysis (dummy now)"
                 </Button>
               </div>
             </div>

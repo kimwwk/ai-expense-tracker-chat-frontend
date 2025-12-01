@@ -86,9 +86,9 @@ export function Dashboard({ widgets, activeTab, onTabChange }: DashboardProps) {
 
   return (
     <div className="h-full flex flex-col border-l bg-muted/10">
-      <div className="p-4 border-b bg-background">
-        <h2 className="font-semibold text-lg flex items-center gap-2">
-          <Activity className="h-5 w-5 text-primary" />
+      <div className="h-14 border-b flex items-center px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <h2 className="font-semibold text-sm flex items-center gap-2">
+          <Activity className="h-4 w-4" />
           Live Dashboard
         </h2>
       </div>

@@ -13,7 +13,7 @@ export const createTransactionChangeRequestTool = tool({
   inputSchema: z.object({
     // Required fields (matching addTransactionTool exactly)
     account_id: z.number().describe("ID of the account for this transaction"),
-    transaction_type: z.enum(["income", "expense"]).describe("Type of transaction: income or expense"),
+    transaction_type: z.enum(["income", "expense", "transfer"]).describe("Type of transaction"),
     amount: z.number().describe("Transaction amount (must be positive)"),
     currency_code: z.string().describe("3-letter ISO currency code (e.g., USD, GBP, EUR)"),
     base_amount: z.number().describe("Amount in base currency for multi-currency support"),
@@ -29,6 +29,7 @@ export const createTransactionChangeRequestTool = tool({
     category_id: z.number().optional().describe("Optional: ID of the category"),
     description: z.string().optional().describe("Optional: Description of the transaction"),
     reference_number: z.string().optional().describe("Optional: Reference or check number"),
+    transfer_account_id: z.number().optional().describe("Optional: ID of the transfer target account"),
     location: z.string().optional().describe("Optional: Location of the transaction"),
     notes: z.string().optional().describe("Optional: Additional notes"),
   }),
@@ -45,7 +46,7 @@ export const updateTransactionChangeRequestTool = tool({
 
     // Optional: any fields being updated (matching updateTransactionTool)
     account_id: z.number().optional().describe("Optional: New account ID"),
-    transaction_type: z.enum(["income", "expense"]).optional().describe("Optional: New transaction type"),
+    transaction_type: z.enum(["income", "expense", "transfer"]).optional().describe("Optional: New transaction type"),
     amount: z.number().optional().describe("Optional: New transaction amount"),
     currency_code: z.string().optional().describe("Optional: New currency code"),
     base_amount: z.number().optional().describe("Optional: New base amount"),
