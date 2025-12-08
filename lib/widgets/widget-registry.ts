@@ -47,31 +47,34 @@ export const widgetRegistry: WidgetRegistry = {
   },
 
   /**
-   * Spending analysis tool
-   * Analyzes spending vs budget for a specific category
+   * Category breakdown analytics tool
+   * Shows transactions grouped by category with bar chart (supports both income and expenses)
    */
-  analyzeSpending: {
-    widgetType: "spending-analysis",
-    title: (args) => `Analysis: ${args?.category || "General"}`,
+  analytics_breakdownByCategory: {
+    widgetType: "summary-chart",
+    title: (args) => {
+      const type = args?.transaction_type === "income" ? "Income" : "Spending"
+      return `${type} by Category`
+    },
     metadata: {
-      description: "Budget analysis for a category",
+      description: "Transaction breakdown by category",
       category: "analysis",
-      icon: "chart-bar",
+      icon: "pie-chart",
       autoFocus: true,
     },
   },
 
   /**
-   * Spending summary tool
-   * Shows comprehensive spending breakdown by category
+   * Budget vs actual analytics tool
+   * Compares actual spending against budget for a category with progress bar
    */
-  getSpendingSummary: {
-    widgetType: "summary-chart",
-    title: "Spending Summary",
+  analytics_budgetVsActual: {
+    widgetType: "spending-analysis",
+    title: (args) => `Budget vs Actual: ${args?.category_id ? `Category ${args.category_id}` : "General"}`,
     metadata: {
-      description: "Comprehensive spending breakdown by category",
+      description: "Budget vs actual spending analysis",
       category: "analysis",
-      icon: "pie-chart",
+      icon: "chart-bar",
       autoFocus: true,
     },
   },

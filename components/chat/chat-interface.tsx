@@ -98,11 +98,11 @@ export function ChatInterface({
                   onClick={() => {
                     onSendMessage({
                       role: "user",
-                      parts: [{ type: "text", text: "Show me all my transactions" }],
+                      parts: [{ type: "text", text: "Today I had lunch $23 and dinner $30 on my mastercard" }],
                     })
                   }}
                 >
-                  "Today I had lunch $23 on my mastercard"
+                  "Today I had lunch $23 and dinner $30 on my mastercard"
                 </Button>
                 <Button
                   variant="outline"
@@ -110,11 +110,11 @@ export function ChatInterface({
                   onClick={() => {
                     onSendMessage({
                       role: "user",
-                      parts: [{ type: "text", text: "Show Spending by Category" }],
+                      parts: [{ type: "text", text: "Show Spending by Category in 2025" }],
                     })
                   }}
                 >
-                  "Show Spending by Category (dummy now)"
+                  "Show Spending by Category in 2025"
                 </Button>
                 <Button
                   variant="outline"
@@ -122,11 +122,11 @@ export function ChatInterface({
                   onClick={() => {
                     onSendMessage({
                       role: "user",
-                      parts: [{ type: "text", text: "Show me food budget analysis" }],
+                      parts: [{ type: "text", text: "Show me restaurant budget analysis" }],
                     })
                   }}
                 >
-                  "Show me food budget analysis (dummy now)"
+                  "Show me restaurant budget analysis"
                 </Button>
               </div>
             </div>

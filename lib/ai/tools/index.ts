@@ -2,12 +2,13 @@
  * Consolidated AI tools export
  */
 
-import { addTransactionTool, getTransactionsTool, updateTransactionTool, deleteTransactionTool, analyzeSpendingTool, getSpendingSummaryTool } from "./transaction.tools"
+import { addTransactionTool, getTransactionsTool, updateTransactionTool, deleteTransactionTool } from "./transaction.tools"
 import { getTableNamesTool, getTableSchemaTool } from "./schema.tools"
 import { createAccountTool, getAccountsTool, getAccountTool, updateAccountTool, deleteAccountTool } from "./account.tools"
 import { createCategoryTool, getCategoriesTool, getCategoryTool, updateCategoryTool, deleteCategoryTool } from "./category.tools"
 import { getAccountTypesTool, getCurrenciesTool } from "./reference.tools"
 import { confirmChangeSetTool, resetChangeSetTool } from "./changeset.tools"
+import { analytics_breakdownByCategory, analytics_budgetVsActual } from "./analytics.tools"
 
 // Import new entity-specific changeset tools
 import {
@@ -32,8 +33,10 @@ export const tools = {
   getTransactions: getTransactionsTool,
   // updateTransaction: updateTransactionTool,
   // deleteTransaction: deleteTransactionTool,
-  analyzeSpending: analyzeSpendingTool,
-  getSpendingSummary: getSpendingSummaryTool,
+
+  // Analytics tools
+  analytics_breakdownByCategory: analytics_breakdownByCategory,
+  analytics_budgetVsActual: analytics_budgetVsActual,
 
   // Account CRUD
   // createAccount: createAccountTool,

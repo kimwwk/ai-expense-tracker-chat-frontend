@@ -4,7 +4,6 @@
 
 import { tool } from "ai"
 import { z } from "zod"
-import { expenseDatabase, budgetData } from "@/lib/data"
 import { getTransactions, createTransaction, updateTransaction, deleteTransaction } from "@/lib/api/transactions"
 
 export const addTransactionTool = tool({
@@ -89,67 +88,6 @@ export const getTransactionsTool = tool({
     } catch (error) {
       console.error("Error fetching transactions:", error)
       throw new Error(`Failed to fetch transactions: ${error instanceof Error ? error.message : "Unknown error"}`)
-    }
-  },
-})
-
-export const analyzeSpendingTool = tool({
-  description: "Analyze spending against budget for a category. Shows how much of the budget has been used.",
-  inputSchema: z.object({
-    category: z.string().describe("Category to analyze"),
-  }),
-  execute: async ({ category }) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    const categoryExpenses = expenseDatabase.filter((e) => e.category.toLowerCase() === category.toLowerCase())
-
-    const spent = categoryExpenses.reduce((sum, e) => sum + e.amount, 0)
-    const budget = budgetData[category] || 0
-    const remaining = budget - spent
-    const percentageUsed = budget > 0 ? (spent / budget) * 100 : 0
-
-    return {
-      category,
-      spent,
-      budget,
-      remaining,
-      percentageUsed,
-      status: percentageUsed > 100 ? "over_budget" : percentageUsed > 80 ? "warning" : "good",
-    }
-  },
-})
-
-export const getSpendingSummaryTool = tool({
-  description: "Get a comprehensive spending summary with totals by category.",
-  inputSchema: z.object({
-    startDate: z.string().optional(),
-    endDate: z.string().optional(),
-  }),
-  execute: async ({ startDate, endDate }) => {
-    await new Promise((resolve) => setTimeout(resolve, 1200))
-
-    let filtered = [...expenseDatabase]
-    if (startDate) filtered = filtered.filter((e) => e.date >= startDate)
-    if (endDate) filtered = filtered.filter((e) => e.date <= endDate)
-
-    const summary = filtered.reduce(
-      (acc, expense) => {
-        if (!acc[expense.category]) {
-          acc[expense.category] = { total: 0, count: 0 }
-        }
-        acc[expense.category].total += expense.amount
-        acc[expense.category].count++
-        return acc
-      },
-      {} as Record<string, { total: number; count: number }>,
-    )
-
-    const grandTotal = Object.values(summary).reduce((sum, cat) => sum + cat.total, 0)
-
-    return {
-      summary,
-      grandTotal,
-      dateRange: { startDate: startDate || "beginning", endDate: endDate || "now" },
     }
   },
 })

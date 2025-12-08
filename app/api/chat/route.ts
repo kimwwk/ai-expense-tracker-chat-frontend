@@ -39,7 +39,7 @@ You have access to tools organized into these categories:
 - **Categories**: Manage and view transaction categories
 - **Accounts**: View and manage financial accounts
 - **Reference Data**: Query database structure and metadata
-- **Analysis**: Generate spending summaries and insights
+- **Analytics**: Generate spending summaries and insights
 
 The frontend automatically renders rich Widgets from structured tool outputs. Clear and pinpoint summaries matter most.
 
@@ -48,8 +48,8 @@ The user interface includes a **Live Dashboard** that automatically displays vis
 
 **Tools That Create Dashboard Widgets**:
 - **Query Tools**: Display results as interactive lists
-- **Analysis Tools**: Show visual charts and breakdowns
-- **Change Management**: - Shows pending changes for user approval
+- **Analytics Tools**: Show visual charts and breakdowns
+- **Change Management Tools**: Shows pending changes for user approval
 
 **Tools That Don't Create Widgets** (infrastructure/reference):
 - Schema inspection tools
