@@ -21,6 +21,7 @@
 - lower priority
 	- [x] agent should be aware of the dashboard as well
 	- [ ] combine the frontend and chat frontend
+	- [x] a bit of analytic widget display 
 	- let user update it as well before appoval
 	- database migration: remove payee_id, add merchant sthing string
 	- widget state management including using ontoolcall callback or use message.parts to pull widgets

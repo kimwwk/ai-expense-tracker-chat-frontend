@@ -86,11 +86,11 @@ export function ChatInterface({
                   onClick={() => {
                     onSendMessage({
                       role: "user",
-                      parts: [{ type: "text", text: "Show me all my transactions" }],
+                      parts: [{ type: "text", text: "Show me all my transactions in this month" }],
                     })
                   }}
                 >
-                  "Show all transactions"
+                  "Show all transactions in this month"
                 </Button>
                 <Button
                   variant="outline"
