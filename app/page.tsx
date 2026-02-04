@@ -1,7 +1,7 @@
 "use client"
 
 import { useChat } from "@ai-sdk/react"
-import { lastAssistantMessageIsCompleteWithToolCalls } from "ai"
+import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls } from "ai"
 import { useWidgetManager } from "@/hooks/use-widget-manager"
 import { Dashboard } from "@/components/dashboard/dashboard"
 import { ChatInterface } from "@/components/chat/chat-interface"
@@ -11,6 +11,8 @@ import { transformToolInput } from "@/lib/changeset/transformations"
 import { EntityType, OperationType } from "@/lib/changeset/types"
 import { useEffect, useRef, useState } from "react"
 import { Sparkles, User } from "lucide-react"
+import { useApiKey } from "@/hooks/use-api-key"
+import { ApiKeyDialog } from "@/components/api-key-dialog"
 
 /**
  * Parse tool name to extract entity and operation
@@ -46,10 +48,15 @@ export default function Page() {
 
 function PageContent() {
   const { addChange, confirmChangeSet, clearChangeSet, setAddToolOutput } = useChangeSet()
+  const { showDialog, saveApiKey, apiKey } = useApiKey()
 
   // @ai-sdk/react v2 uses a different API - we manage input state locally
   const { messages, sendMessage, setMessages, status, addToolOutput } = useChat({
     // Defaults to /api/chat endpoint
+    // TODO this code doesnt work!!!!
+    transport: new DefaultChatTransport({
+      body: { apiKey }
+    }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     onToolCall: async ({ toolCall }) => {
       // Check if it's a dynamic tool first for proper type narrowing
@@ -265,6 +272,9 @@ function PageContent() {
           <Dashboard widgets={widgets} activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
       </div>
+
+      {/* API Key Configuration Dialog */}
+      <ApiKeyDialog open={showDialog} onKeySubmit={saveApiKey} />
     </div>
   )
 }
