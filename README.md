@@ -5,6 +5,14 @@
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/kimsing-ais-projects/v0-lang-graph-chat-architecture)
 [![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/rLUz501f5R7)
 
+## Why I built this
+
+Not AI as a chat bubble, but as the thing that **drives the UI**. An expense tracker as the testbed:
+
+- talk in plain language → the agent picks the tools and renders the widgets 📊
+- every write goes through an explicit **changeset review** — no silent edits 🔁
+- the point isn't "chatbot for money," it's the interface pattern
+
 ## Overview
 
 This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
