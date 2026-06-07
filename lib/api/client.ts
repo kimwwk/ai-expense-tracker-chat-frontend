@@ -2,6 +2,8 @@
  * Base HTTP client for backend API communication
  */
 
+import { isMockApiEnabled, mockApiClient } from "./mock"
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8001"
 
 export class ApiError extends Error {
@@ -16,6 +18,13 @@ export class ApiError extends Error {
 }
 
 export async function apiClient<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  // Backend-less mode: serve everything from the in-memory mock so the app
+  // stays fully functional without a live service. Enabled by default; set
+  // NEXT_PUBLIC_USE_MOCK_API="false" to hit the real NEXT_PUBLIC_API_BASE_URL.
+  if (isMockApiEnabled) {
+    return mockApiClient<T>(endpoint, options)
+  }
+
   const url = `${API_BASE_URL}${endpoint}`
 
   try {
